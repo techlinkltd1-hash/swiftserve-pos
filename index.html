@@ -1,0 +1,1693 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>SwiftServe POS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+    <style>
+      button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) { min-height: 2.25rem; }
+      * { box-sizing: border-box; }
+      :root {
+        --bg: #eef1ec;
+        --surface: #ffffff;
+        --surface-2: #f4f6f1;
+        --ink: #1b241e;
+        --muted: #5d6d62;
+        --line: #d9dfd6;
+        --rail: #0d2b1d;
+        --rail-ink: #cfe3d4;
+        --rail-active: #1d4a32;
+        --accent: #c8500f;
+        --accent-ink: #ffffff;
+        --green: #177245;
+        --green-soft: #e2f2e7;
+        --amber: #b97a08;
+        --amber-soft: #fdf0d3;
+        --red: #b3372a;
+        --red-soft: #fbe7e3;
+        --blue: #256d85;
+        --blue-soft: #e0eff4;
+        --shadow: 0 10px 30px rgba(20, 40, 28, .12);
+        --radius: 14px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #10140f;
+          --surface: #1a201a;
+          --surface-2: #222922;
+          --ink: #edf3ec;
+          --muted: #9db1a2;
+          --line: #33402f;
+          --rail: #0a1f14;
+          --rail-ink: #b9d4c0;
+          --rail-active: #1d4a32;
+          --accent: #e06a24;
+          --green: #3fae74;
+          --green-soft: #173527;
+          --amber: #e0a83c;
+          --amber-soft: #3a2f12;
+          --red: #e07a6a;
+          --red-soft: #3d1f1a;
+          --blue: #5aa7c2;
+          --blue-soft: #17303a;
+          --shadow: 0 10px 30px rgba(0,0,0,.45);
+        }
+      }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        -webkit-font-smoothing: antialiased;
+      }
+      .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+      button { font: inherit; cursor: pointer; }
+      input, select { font: inherit; color: var(--ink); }
+
+      .app { display: flex; min-height: 100vh; }
+
+      /* ---------- Rail nav ---------- */
+      .rail {
+        width: 84px; flex: 0 0 84px;
+        background: var(--rail); color: var(--rail-ink);
+        display: flex; flex-direction: column; align-items: stretch;
+        padding: 14px 10px; gap: 6px;
+        position: sticky; top: 0; height: 100vh; overflow-y: auto;
+      }
+      .brand { text-align: center; padding: 4px 0 14px; }
+      .brand .mark {
+        width: 44px; height: 44px; margin: 0 auto 6px;
+        border-radius: 12px; background: var(--accent);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-weight: 800; font-size: 20px; letter-spacing: -.5px;
+      }
+      .brand .name { font-size: 11px; font-weight: 700; line-height: 1.25; color: #fff; }
+      .brand .sub { font-size: 9.5px; color: var(--rail-ink); opacity: .75; }
+      .nav-btn {
+        display: flex; flex-direction: column; align-items: center; gap: 4px;
+        padding: 10px 4px; border: 0; border-radius: 12px;
+        background: transparent; color: var(--rail-ink);
+        font-size: 11px; font-weight: 600; min-height: 56px;
+        position: relative;
+      }
+      .nav-btn svg { width: 22px; height: 22px; }
+      .nav-btn.active { background: var(--rail-active); color: #fff; }
+      .nav-btn .badge {
+        position: absolute; top: 6px; right: 10px;
+        background: var(--accent); color: #fff;
+        font-size: 10px; font-weight: 700; min-width: 18px; height: 18px;
+        border-radius: 9px; display: flex; align-items: center; justify-content: center;
+        padding: 0 5px;
+      }
+      .rail .spacer { flex: 1; }
+      .rail .biz { font-size: 10px; text-align: center; color: var(--rail-ink); opacity: .8; line-height: 1.4; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.14); }
+
+      /* ---------- Main ---------- */
+      .main { flex: 1; min-width: 0; padding: 20px 22px 40px; max-width: 1440px; margin: 0 auto; width: 100%; }
+      .view { display: none; }
+      .view.active { display: block; }
+      .view-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; margin-bottom: 16px; }
+      .view-head h1 { font-size: 24px; margin: 0; letter-spacing: -.4px; }
+      .view-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+      /* ---------- POS layout ---------- */
+      .pos-wrap { display: grid; grid-template-columns: minmax(0,1fr) 370px; gap: 18px; align-items: start; }
+      .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+      .panel-pad { padding: 16px; }
+
+      .table-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+      .table-chip {
+        border: 1.5px solid var(--line); background: var(--surface);
+        border-radius: 999px; padding: 8px 14px; font-weight: 600; font-size: 13.5px;
+        display: inline-flex; align-items: center; gap: 7px; min-height: 38px;
+      }
+      .table-chip .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+      .table-chip.busy .dot { background: var(--accent); }
+      .table-chip.sel { border-color: var(--accent); background: var(--amber-soft); color: var(--ink); }
+      .table-chip .cnt { font-size: 11px; background: var(--accent); color: #fff; border-radius: 8px; padding: 1px 6px; font-weight: 700; }
+
+      .cat-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+      .cat-btn {
+        border: 1px solid var(--line); background: var(--surface-2);
+        border-radius: 10px; padding: 8px 14px; font-weight: 600; font-size: 13.5px; min-height: 38px;
+      }
+      .cat-btn.sel { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+      .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 10px; }
+      .dish {
+        text-align: left; border: 1px solid var(--line); background: var(--surface);
+        border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+        min-height: 108px; transition: transform .06s ease;
+      }
+      .dish:active { transform: scale(.98); }
+      .dish.off { opacity: .45; }
+      .dish .tile {
+        width: 38px; height: 38px; border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 13px; color: #fff; letter-spacing: .3px;
+      }
+      .dish .dname { font-weight: 600; font-size: 14px; line-height: 1.3; flex: 1; }
+      .dish .dprice { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 14px; color: var(--accent); }
+      .dish .in-cart { font-size: 11px; font-weight: 700; color: var(--green); }
+
+      /* Cart */
+      .cart-panel { position: sticky; top: 20px; }
+      .cart-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px; }
+      .cart-head h2 { font-size: 17px; margin: 0; }
+      .cart-meta { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+      .cart-meta select { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); padding: 4px 8px; font-size: 13px; }
+      .cart-lines { display: flex; flex-direction: column; }
+      .cart-line { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+      .cart-line .lname { flex: 1; min-width: 0; }
+      .cart-line .lname b { display: block; font-size: 14px; font-weight: 600; }
+      .cart-line .lname span { font-size: 12px; color: var(--muted); font-family: "IBM Plex Mono", monospace; }
+      .qty { display: inline-flex; align-items: center; gap: 2px; }
+      .qty button {
+        width: 32px; height: 32px; min-height: 32px; border-radius: 8px;
+        border: 1px solid var(--line); background: var(--surface-2); font-weight: 700; font-size: 15px;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .qty .n { min-width: 26px; text-align: center; font-weight: 700; font-family: "IBM Plex Mono", monospace; }
+      .cart-line .ltotal { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 13.5px; min-width: 74px; text-align: right; }
+      .cart-empty { color: var(--muted); font-size: 14px; padding: 18px 0; text-align: center; }
+      .cart-total { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0 4px; }
+      .cart-total .lbl { font-weight: 600; font-size: 14px; }
+      .cart-total .amt { font-family: "IBM Plex Mono", monospace; font-size: 21px; font-weight: 600; }
+      .btn {
+        border: 0; border-radius: 11px; padding: 11px 16px;
+        font-weight: 700; font-size: 14.5px; min-height: 44px;
+      }
+      .btn-primary { background: var(--accent); color: var(--accent-ink); width: 100%; }
+      .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+      .btn-ghost { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
+      .btn-green { background: var(--green); color: #fff; }
+      .btn-sm { min-height: 38px; padding: 8px 12px; font-size: 13px; border-radius: 9px; }
+      .clear-link { background: none; border: 0; color: var(--red); font-weight: 600; font-size: 13px; padding: 6px; min-height: 36px; }
+
+      /* ---------- Kitchen ---------- */
+      .kds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 14px; align-items: start; }
+      .ticket { background: var(--surface); border: 1px solid var(--line); border-top: 5px solid var(--amber); border-radius: 12px; padding: 14px; }
+      .ticket.st-preparing { border-top-color: var(--blue); }
+      .ticket.st-ready { border-top-color: var(--green); }
+      .ticket-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+      .ticket-head .tno { font-weight: 800; font-size: 16px; }
+      .ticket-head .ttime { color: var(--muted); font-size: 12.5px; font-family: "IBM Plex Mono", monospace; }
+      .ticket .tsub { color: var(--muted); font-size: 13px; margin: 2px 0 10px; }
+      .ticket ul { list-style: none; margin: 0 0 12px; padding: 0; }
+      .ticket li { display: flex; gap: 8px; padding: 5px 0; font-size: 14px; border-bottom: 1px dashed var(--line); }
+      .ticket li:last-child { border-bottom: 0; }
+      .ticket li .q { font-family: "IBM Plex Mono", monospace; font-weight: 600; color: var(--accent); min-width: 30px; }
+      .status-chip { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .4px; }
+      .st-new-chip { background: var(--amber-soft); color: var(--amber); }
+      .st-preparing-chip { background: var(--blue-soft); color: var(--blue); }
+      .st-ready-chip { background: var(--green-soft); color: var(--green); }
+      .empty-note { color: var(--muted); font-size: 14.5px; background: var(--surface); border: 1px dashed var(--line); border-radius: var(--radius); padding: 26px; text-align: center; }
+
+      /* ---------- Bills ---------- */
+      .bills-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 18px; align-items: start; }
+      .bill-list { display: flex; flex-direction: column; gap: 10px; }
+      .bill-row {
+        display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+        background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px;
+      }
+      .bill-row.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+      .bill-row .bmain { flex: 1; min-width: 0; }
+      .bill-row .bmain b { font-size: 15px; }
+      .bill-row .bmain span { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+      .bill-row .bamt { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 15px; }
+      .bill-detail { position: sticky; top: 20px; }
+      .bill-lines { margin-bottom: 6px; }
+      .bill-line { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+      .bill-line .amt { font-family: "IBM Plex Mono", monospace; }
+      .sum-row { display: flex; justify-content: space-between; font-size: 14px; padding: 5px 0; }
+      .sum-row.grand { font-size: 17px; font-weight: 800; border-top: 2px solid var(--ink); margin-top: 8px; padding-top: 10px; }
+      .sum-row .amt { font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+      .sum-row.disc .amt { color: var(--green); }
+      .field-row { display: flex; gap: 10px; margin: 12px 0; }
+      .field { flex: 1; }
+      .field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+      .field input { width: 100%; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 8px 10px; }
+      .pay-row { display: flex; gap: 8px; margin: 6px 0 14px; }
+      .pay-btn { flex: 1; border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; font-weight: 700; font-size: 13.5px; min-height: 42px; }
+      .pay-btn.sel { border-color: var(--green); background: var(--green-soft); color: var(--green); }
+      .split-note { font-size: 13px; color: var(--muted); margin: -4px 0 10px; }
+      .split-note b { color: var(--ink); font-family: "IBM Plex Mono", monospace; }
+
+      /* ---------- Dashboard ---------- */
+      .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 18px; }
+      .kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+      .kpi .klbl { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+      .kpi .kval { font-family: "IBM Plex Mono", monospace; font-size: 27px; font-weight: 600; margin-top: 6px; }
+      .kpi .ksub { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+      .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+      .dash-grid .panel h3, .panel > h3 { font-size: 15.5px; margin: 0 0 14px; }
+      .bar-row { display: grid; grid-template-columns: 150px 1fr 86px; gap: 10px; align-items: center; padding: 6px 0; font-size: 13.5px; }
+      .bar-row .bname { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .bar-track { height: 12px; background: var(--surface-2); border-radius: 6px; overflow: hidden; }
+      .bar-fill { height: 100%; border-radius: 6px; background: var(--green); }
+      .bar-fill.cat { background: var(--accent); }
+      .bar-row .bval { font-family: "IBM Plex Mono", monospace; text-align: right; font-size: 12.5px; }
+      .txn { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+      .txn:last-child { border-bottom: 0; }
+      .txn .tmain { flex: 1; min-width: 0; }
+      .txn .tmain b { font-weight: 600; }
+      .txn .tmain span { display: block; color: var(--muted); font-size: 12.5px; }
+      .txn .tamt { font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+      .method-chip { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+      .chart-wrap { width: 100%; }
+      .chart-wrap svg { width: 100%; height: auto; display: block; }
+
+      /* ---------- Menu manager ---------- */
+      .add-form { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; margin-bottom: 18px; }
+      .add-form input, .add-form select { border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 8px 10px; width: 100%; }
+      .mgr-cat { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin: 18px 0 6px; }
+      .mgr-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+      .mgr-row .mname { flex: 1; font-weight: 600; font-size: 14.5px; min-width: 0; }
+      .mgr-row .mname.off { color: var(--muted); text-decoration: line-through; }
+      .mgr-row .price-in { width: 110px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); padding: 6px 8px; font-family: "IBM Plex Mono", monospace; }
+      .avail-btn { border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700; background: var(--green-soft); color: var(--green); min-height: 36px; }
+      .avail-btn.off { background: var(--red-soft); color: var(--red); }
+      .del-btn { border: 0; background: none; color: var(--red); font-size: 18px; font-weight: 700; width: 38px; height: 38px; border-radius: 8px; }
+      .del-btn:hover { background: var(--red-soft); }
+
+      /* ---------- Receipt modal ---------- */
+      .overlay {
+        position: fixed; inset: 0; background: rgba(10, 18, 12, .55);
+        display: none; align-items: center; justify-content: center; padding: 18px; z-index: 50;
+      }
+      .overlay.open { display: flex; }
+      .receipt-card { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); max-width: 400px; width: 100%; max-height: 88vh; overflow: auto; padding: 22px; }
+      .receipt {
+        font-family: "IBM Plex Mono", monospace; font-size: 13px; line-height: 1.55;
+        background: var(--surface-2); border: 1px dashed var(--line); border-radius: 10px; padding: 18px 16px; white-space: pre-wrap; word-break: break-word;
+      }
+      .receipt-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+      .receipt-actions .btn { flex: 1 1 108px; }
+      .receipt-hint { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; line-height: 1.5; }
+
+      /* ---------- Toast ---------- */
+      .toast {
+        position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(20px);
+        background: var(--ink); color: var(--bg); padding: 12px 20px; border-radius: 999px;
+        font-weight: 600; font-size: 14px; opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 60;
+        max-width: calc(100vw - 32px); text-align: center;
+      }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+      /* ---------- Trial ---------- */
+      .trial-bar {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        background: var(--surface); border: 1px solid var(--line);
+        border-left: 4px solid var(--green); border-radius: 12px;
+        padding: 10px 14px; margin-bottom: 16px;
+      }
+      .trial-bar.warn { border-left-color: var(--amber); }
+      .trial-bar .trial-label { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+      .trial-bar .trial-time { font-family: "IBM Plex Mono", monospace; font-size: 19px; font-weight: 600; }
+      .trial-bar .trial-note { font-size: 13px; color: var(--muted); }
+      .trial-track { flex: 1 1 140px; min-width: 120px; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+      .trial-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 1s linear; }
+      .trial-bar.warn .trial-fill { background: var(--amber); }
+      .trial-lock {
+        position: fixed; inset: 0; z-index: 100;
+        background: var(--bg);
+        display: none; align-items: center; justify-content: center; padding: 20px;
+      }
+      .trial-lock.open { display: flex; }
+      .trial-lock-card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+        box-shadow: var(--shadow); max-width: 440px; width: 100%; padding: 32px 26px; text-align: center;
+      }
+      .trial-lock-card .lock-mark {
+        width: 58px; height: 58px; margin: 0 auto 16px; border-radius: 50%;
+        background: var(--red-soft); color: var(--red);
+        display: flex; align-items: center; justify-content: center;
+      }
+      .trial-lock-card .lock-mark svg { width: 28px; height: 28px; }
+      .trial-lock-card h2 { font-size: 23px; margin: 0 0 10px; letter-spacing: -.3px; }
+      .trial-lock-card p { margin: 0 0 12px; color: var(--muted); font-size: 15px; line-height: 1.55; }
+      .trial-lock-card p b { color: var(--ink); }
+      body.trial-expired { overflow: hidden; }
+
+      /* ---------- Session bar ---------- */
+      .session-bar {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+        margin-bottom: 12px; font-size: 13.5px; color: var(--muted);
+      }
+      .session-bar b { color: var(--ink); }
+      .session-bar[hidden], .pin-form[hidden] { display: none !important; }
+      .role-chip { font-size: 10.5px; font-weight: 800; padding: 3px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .5px; vertical-align: 1px; white-space: nowrap; }
+      .role-admin { background: var(--amber-soft); color: var(--amber); }
+      .role-manager { background: var(--blue-soft); color: var(--blue); }
+      .role-kitchen { background: var(--green-soft); color: var(--green); }
+
+      /* ---------- Sign in ---------- */
+      .signin { position: fixed; inset: 0; z-index: 90; background: var(--bg); display: none; overflow-y: auto; padding: 30px 16px 40px; }
+      .signin.open { display: block; }
+      .signin-card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); max-width: 430px; margin: 0 auto; padding: 28px 24px; }
+      .signin-card .mark { width: 48px; height: 48px; border-radius: 12px; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 22px; margin-bottom: 14px; }
+      .signin-card h2 { font-size: 22px; margin: 0 0 6px; letter-spacing: -.3px; }
+      .signin-card .sub { color: var(--muted); font-size: 14px; margin: 0 0 18px; line-height: 1.5; }
+      .staff-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+      .staff-btn { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: left; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 12px 14px; font-weight: 700; font-size: 15px; min-height: 50px; }
+      .staff-btn.sel { border-color: var(--accent); background: var(--amber-soft); }
+      .pin-form label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+      .pin-form input { width: 100%; border: 1.5px solid var(--line); border-radius: 10px; background: var(--surface-2); padding: 11px 12px; font-size: 18px; letter-spacing: 4px; margin-bottom: 12px; }
+      .pin-error { color: var(--red); font-size: 13.5px; font-weight: 600; margin: 0 0 10px; }
+      .demo-pins { margin-top: 18px; background: var(--surface-2); border: 1px dashed var(--line); border-radius: 10px; padding: 11px 12px; font-size: 13px; color: var(--muted); text-align: center; line-height: 1.6; }
+      .demo-pins b { color: var(--ink); font-family: "IBM Plex Mono", monospace; }
+
+      /* ---------- Stock & profit ---------- */
+      .st-ok-chip { background: var(--green-soft); color: var(--green); }
+      .st-critical-chip { background: var(--amber-soft); color: var(--amber); }
+      .st-finished-chip { background: var(--red-soft); color: var(--red); }
+      .stock-row { padding: 13px 0; border-bottom: 1px dashed var(--line); }
+      .stock-row:last-child { border-bottom: 0; }
+      .stock-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      .stock-top .sname { font-weight: 700; font-size: 15px; flex: 1; min-width: 120px; }
+      .stock-top .sleft { font-family: "IBM Plex Mono", monospace; font-weight: 600; font-size: 14px; white-space: nowrap; }
+      .level-track { height: 9px; background: var(--surface-2); border-radius: 5px; overflow: hidden; margin-top: 9px; }
+      .level-fill { height: 100%; border-radius: 5px; background: var(--green); }
+      .level-fill.critical { background: var(--amber); }
+      .level-fill.finished { background: var(--red); }
+      .stock-figs { display: flex; flex-wrap: wrap; gap: 3px 18px; color: var(--muted); font-size: 13px; margin-top: 7px; }
+      .stock-figs b { color: var(--ink); font-family: "IBM Plex Mono", monospace; font-weight: 600; }
+      .field select { width: 100%; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-2); padding: 8px 10px; }
+      .chart-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+      .chart-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+      .chart-legend .sw-line { height: 4px; border-radius: 2px; vertical-align: 2px; }
+      .chart-note { font-size: 13px; color: var(--muted); margin: 10px 0 0; line-height: 1.55; }
+      .stack-bar { display: flex; height: 20px; border-radius: 7px; overflow: hidden; margin-bottom: 14px; background: var(--surface-2); }
+      .stack-bar span { display: block; height: 100%; }
+      .attn-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 14px; flex-wrap: wrap; }
+      .attn-row:last-child { border-bottom: 0; }
+      .attn-row .aname { flex: 1; font-weight: 600; min-width: 100px; }
+      .attn-row .aleft { color: var(--muted); font-family: "IBM Plex Mono", monospace; font-size: 13px; white-space: nowrap; }
+
+      /* ---------- Users ---------- */
+      .user-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+      .user-row:last-child { border-bottom: 0; }
+      .user-row .uname { font-weight: 700; font-size: 15px; flex: 1 1 130px; min-width: 0; }
+      .user-row select, .user-row .pin-in { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); padding: 6px 8px; color: var(--ink); }
+      .user-row .pin-in { width: 96px; font-family: "IBM Plex Mono", monospace; }
+      .mini-lbl { font-size: 10.5px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+      @media (max-width: 860px) {
+        .nav-btn { font-size: 10px; padding: 8px 2px; gap: 3px; }
+        .nav-btn svg { width: 20px; height: 20px; }
+        .nav-btn .badge { right: 2px; top: 4px; }
+      }
+
+      /* ---------- Responsive ---------- */
+      @media (max-width: 1080px) {
+        .pos-wrap, .bills-wrap { grid-template-columns: 1fr; }
+        .cart-panel, .bill-detail { position: static; }
+        .dash-grid { grid-template-columns: 1fr; }
+      }
+      @media (max-width: 640px) {
+        .mgr-row { flex-wrap: wrap; row-gap: 6px; }
+        .mgr-row .mname { flex: 1 1 100%; }
+        .mgr-row .price-in { flex: 1 1 auto; width: auto; min-width: 90px; }
+      }
+      @media (max-width: 860px) {
+        .app { flex-direction: column; }
+        .rail {
+          order: 2; position: fixed; bottom: 0; left: 0; right: 0; top: auto;
+          width: 100%; height: auto; flex-direction: row; justify-content: space-around;
+          padding: 8px 6px calc(8px + env(safe-area-inset-bottom)); z-index: 40;
+        }
+        .brand, .rail .spacer, .rail .biz { display: none; }
+        .nav-btn { flex: 1; min-height: 52px; }
+        .main { padding: 16px 14px 110px; }
+        .add-form { grid-template-columns: 1fr 1fr; }
+        .bar-row { grid-template-columns: 110px 1fr 76px; }
+        .toast { bottom: 92px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav class="rail" aria-label="Main">
+        <div class="brand">
+          <div class="mark">S</div>
+          <div class="name">SwiftServe</div>
+          <div class="sub">POS</div>
+        </div>
+        <button class="nav-btn active" data-view="pos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v5"/></svg>
+          Orders
+        </button>
+        <button class="nav-btn" data-view="kitchen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M2 11h20M9 7c0-1.5 2-1.5 2-3M14 7c0-1.5 2-1.5 2-3"/></svg>
+          Kitchen
+          <span class="badge" id="kitchenBadge" hidden>0</span>
+        </button>
+        <button class="nav-btn" data-view="bills">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6"/></svg>
+          Bills
+          <span class="badge" id="billsBadge" hidden>0</span>
+        </button>
+        <button class="nav-btn" data-view="dashboard">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>
+          Reports
+        </button>
+        <button class="nav-btn" data-view="menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          Menu
+        </button>
+        <button class="nav-btn" data-view="stock">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>
+          Stock
+        </button>
+        <button class="nav-btn" data-view="profit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>
+          Profit
+        </button>
+        <button class="nav-btn" data-view="users">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.5a3.5 3.5 0 0 1 0 5.8M18.6 15.2c1.5.9 2.4 2.4 2.4 4.8"/></svg>
+          Users
+        </button>
+        <div class="spacer"></div>
+        <div class="biz">Mama's Kitchen<br />Lekki, Lagos — Demo</div>
+      </nav>
+
+      <main class="main">
+        <!-- ============ SESSION ============ -->
+        <div class="session-bar" id="sessionBar" hidden>
+          <span>Signed in as <b id="sessionName"></b> <span class="role-chip" id="sessionRole"></span></span>
+          <button class="btn btn-ghost btn-sm" id="signOutBtn">Sign out</button>
+        </div>
+
+        <!-- ============ TRIAL ============ -->
+        <div class="trial-bar" id="trialBar" role="status" aria-live="polite">
+          <span class="trial-label">Demo trial</span>
+          <span class="trial-time" id="trialTime">2:00:00</span>
+          <span class="trial-note">left to try SwiftServe POS</span>
+          <span class="trial-track" aria-hidden="true"><span class="trial-fill" id="trialFill" style="display:block;width:100%"></span></span>
+        </div>
+
+        <!-- ============ POS / ORDERS ============ -->
+        <section class="view active" id="view-pos">
+          <div class="view-head">
+            <h1>Take an order</h1>
+            <p>Pick a table, tap dishes to add them, then send the order to the kitchen.</p>
+          </div>
+          <div class="table-row" id="tableRow"></div>
+          <div class="pos-wrap">
+            <div>
+              <div class="cat-row" id="catRow"></div>
+              <div class="menu-grid" id="menuGrid"></div>
+            </div>
+            <aside class="panel panel-pad cart-panel">
+              <div class="cart-head">
+                <h2 id="cartTitle">Table 1</h2>
+                <button class="clear-link" id="clearCart">Clear</button>
+              </div>
+              <div class="cart-meta">Server:
+                <select id="serverSel" aria-label="Server"></select>
+              </div>
+              <div class="cart-lines" id="cartLines"></div>
+              <div class="cart-total">
+                <span class="lbl">Total</span>
+                <span class="amt" id="cartTotal">₦0</span>
+              </div>
+              <button class="btn btn-primary" id="sendOrder">Send to Kitchen</button>
+            </aside>
+          </div>
+        </section>
+
+        <!-- ============ KITCHEN ============ -->
+        <section class="view" id="view-kitchen">
+          <div class="view-head">
+            <h1>Kitchen display</h1>
+            <p>New tickets land here the moment a server sends them. Move each one along as the food is made.</p>
+          </div>
+          <div class="kds-grid" id="kdsGrid"></div>
+          <div class="empty-note" id="kdsEmpty">No tickets in the kitchen right now. Orders sent from the Orders screen will appear here.</div>
+        </section>
+
+        <!-- ============ BILLS ============ -->
+        <section class="view" id="view-bills">
+          <div class="view-head">
+            <h1>Bills</h1>
+            <p>Orders that are ready or served, waiting to be paid. Pick one to settle it.</p>
+          </div>
+          <div class="bills-wrap">
+            <div class="bill-list" id="billList"></div>
+            <aside class="panel panel-pad bill-detail" id="billDetail"></aside>
+          </div>
+        </section>
+
+        <!-- ============ DASHBOARD ============ -->
+        <section class="view" id="view-dashboard">
+          <div class="view-head">
+            <h1>Today at Mama's Kitchen</h1>
+            <p id="dashDate"></p>
+          </div>
+          <div class="kpis" id="kpis"></div>
+          <div class="dash-grid">
+            <div class="panel panel-pad">
+              <h3>Sales by hour</h3>
+              <div class="chart-wrap" id="hourChart"></div>
+            </div>
+            <div class="panel panel-pad">
+              <h3>Best sellers today</h3>
+              <div id="bestSellers"></div>
+            </div>
+          </div>
+          <div class="dash-grid">
+            <div class="panel panel-pad">
+              <h3>Sales by category</h3>
+              <div id="catSales"></div>
+            </div>
+            <div class="panel panel-pad">
+              <h3>Recent payments</h3>
+              <div id="recentTxns"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ MENU MANAGER ============ -->
+        <section class="view" id="view-menu">
+          <div class="view-head">
+            <h1>Menu manager</h1>
+            <p>Add dishes, change prices and what each dish costs to make, or mark something sold out. Changes show on the order screen straight away.</p>
+          </div>
+          <div class="panel panel-pad">
+            <form class="add-form" id="addForm">
+              <input id="newName" type="text" placeholder="Dish name — e.g. Coconut Rice" required maxlength="48" />
+              <select id="newCat" aria-label="Category"></select>
+              <input id="newPrice" type="number" placeholder="Price ₦" min="50" step="50" required />
+              <input id="newCost" type="number" placeholder="Cost to make ₦" min="0" step="50" />
+              <button class="btn btn-green" type="submit">Add dish</button>
+            </form>
+            <div id="mgrList"></div>
+          </div>
+        </section>
+
+        <!-- ============ STOCK ============ -->
+        <section class="view" id="view-stock">
+          <div class="view-head">
+            <h1>Stock</h1>
+            <p>What the kitchen started the week with, what has been used, and what is left. Levels drop on their own as bills are settled, and a dish cannot be sold once an ingredient it needs has finished.</p>
+          </div>
+          <div class="kpis" id="stockKpis"></div>
+          <div class="panel panel-pad" style="margin-bottom:14px">
+            <h3>Stock levels</h3>
+            <div id="stockList"></div>
+          </div>
+          <div class="dash-grid">
+            <div class="panel panel-pad">
+              <h3>Restock an item</h3>
+              <form id="restockForm">
+                <div class="field" style="margin-bottom:12px"><label for="restockItem">Item</label><select id="restockItem"></select></div>
+                <div class="field-row" style="margin-top:0">
+                  <div class="field"><label for="restockQty">Quantity added</label><input id="restockQty" type="number" min="0" step="any" placeholder="e.g. 5" required /></div>
+                  <div class="field"><label for="restockCost">Amount paid ₦</label><input id="restockCost" type="number" min="0" step="50" placeholder="e.g. 34000" required /></div>
+                </div>
+                <button class="btn btn-green" type="submit" style="width:100%">Add restock</button>
+              </form>
+            </div>
+            <div class="panel panel-pad">
+              <h3>Restock history</h3>
+              <div id="restockLog"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ PROFIT ============ -->
+        <section class="view" id="view-profit">
+          <div class="view-head">
+            <h1>Profit</h1>
+            <p>Whether the restaurant is actually making money — income set against the cost of the food sold and the money spent restocking. Admin only.</p>
+          </div>
+          <div class="kpis" id="profitKpis"></div>
+          <div class="panel panel-pad" style="margin-bottom:14px">
+            <h3>Income vs costs — last 7 days</h3>
+            <div class="chart-legend">
+              <span><span class="sw" style="background:#177245"></span>Income</span>
+              <span><span class="sw" style="background:#b3372a"></span>Costs (food + restocking)</span>
+              <span><span class="sw sw-line" style="background:#c8500f"></span>Profit</span>
+            </div>
+            <div class="chart-wrap" id="profitChart"></div>
+            <p class="chart-note" id="profitNote"></p>
+          </div>
+          <div class="dash-grid">
+            <div class="panel panel-pad">
+              <h3>Where today's money went</h3>
+              <div id="profitBreakdown"></div>
+            </div>
+            <div class="panel panel-pad">
+              <h3>Stock needing attention</h3>
+              <div id="profitAttention"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ USERS ============ -->
+        <section class="view" id="view-users">
+          <div class="view-head">
+            <h1>Users &amp; access</h1>
+            <p>Who can sign in, and what each level can do. Admin runs everything, Manager runs the day, Kitchen sees the kitchen screen only. Only Admin can change this list.</p>
+          </div>
+          <div class="panel panel-pad">
+            <form class="add-form" id="addUserForm" style="grid-template-columns:2fr 1fr 1fr auto">
+              <input id="newUserName" type="text" placeholder="Staff name — e.g. Bola" maxlength="32" />
+              <select id="newUserRole" aria-label="Role">
+                <option value="admin">Admin</option>
+                <option value="manager" selected>Manager</option>
+                <option value="kitchen">Kitchen</option>
+              </select>
+              <input id="newUserPin" type="text" inputmode="numeric" placeholder="PIN (4+ digits)" maxlength="8" />
+              <button class="btn btn-green" type="submit">Add user</button>
+            </form>
+            <div id="userList"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Sign in -->
+    <div class="signin open" id="signinOverlay">
+      <div class="signin-card">
+        <div class="mark">S</div>
+        <h2>Sign in to SwiftServe POS</h2>
+        <p class="sub">Mama's Kitchen, Lekki. Tap your name, then enter your PIN. What you can see and do depends on your level — Admin, Manager or Kitchen.</p>
+        <div class="staff-list" id="staffList"></div>
+        <form class="pin-form" id="pinForm" hidden>
+          <label for="pinInput" id="pinLabel">Your PIN</label>
+          <input id="pinInput" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="••••" />
+          <p class="pin-error" id="pinError" hidden>That PIN doesn't match this name. Check it and try again.</p>
+          <button class="btn btn-primary" type="submit">Sign in</button>
+        </form>
+        <div class="demo-pins">Demo PINs — Admin <b>1234</b> · Manager <b>2222</b> · Kitchen <b>3333</b><br />The Admin can change these under Users &amp; access.</div>
+      </div>
+    </div>
+
+    <!-- Receipt modal -->
+    <div class="overlay" id="receiptOverlay">
+      <div class="receipt-card">
+        <div class="receipt" id="receiptText"></div>
+        <div class="receipt-actions">
+          <button class="btn btn-ghost" id="receiptClose">Close</button>
+          <button class="btn btn-ghost" id="receiptCopy">Copy receipt</button>
+          <button class="btn btn-primary" id="receiptDownload" style="width:auto">Download receipt</button>
+        </div>
+        <p class="receipt-hint">If the download doesn't start on this device, tap <b>Copy receipt</b> and paste the receipt into your notes or a message to keep it.</p>
+      </div>
+    </div>
+
+    <!-- Trial expired lock -->
+    <div class="trial-lock" id="trialLock" role="alertdialog" aria-modal="true" aria-labelledby="trialLockTitle" aria-describedby="trialLockMsg">
+      <div class="trial-lock-card">
+        <div class="lock-mark">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        </div>
+        <h2 id="trialLockTitle">Your trial has expired</h2>
+        <p id="trialLockMsg">The <b>120-minute demo trial</b> of SwiftServe POS has ended, so the app is now locked.</p>
+        <p>To keep taking orders, running your kitchen and settling bills, please <b>contact the vendor</b> to buy the full version.</p>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      "use strict";
+      /* ================= Data ================= */
+      var CATS = ["Mains", "Soups", "Grills", "Sides", "Drinks", "Desserts"];
+      var CAT_COLORS = { Mains: "#c8500f", Soups: "#b3372a", Grills: "#7a4a12", Sides: "#177245", Drinks: "#256d85", Desserts: "#8a4b7c" };
+      var MENU = [
+        { id: 1,  name: "Jollof Rice & Chicken",   cat: "Mains",    price: 4500, avail: true },
+        { id: 2,  name: "Fried Rice & Turkey",     cat: "Mains",    price: 5000, avail: true },
+        { id: 3,  name: "White Rice & Stew",       cat: "Mains",    price: 3800, avail: true },
+        { id: 4,  name: "Pounded Yam & Egusi",     cat: "Mains",    price: 5500, avail: true },
+        { id: 5,  name: "Amala & Ewedu",           cat: "Mains",    price: 4200, avail: true },
+        { id: 6,  name: "Ofada Rice & Ayamase",    cat: "Mains",    price: 4800, avail: true },
+        { id: 7,  name: "Goat Meat Pepper Soup",   cat: "Soups",    price: 3500, avail: true },
+        { id: 8,  name: "Catfish Pepper Soup",     cat: "Soups",    price: 4000, avail: true },
+        { id: 9,  name: "Ogbono Soup",             cat: "Soups",    price: 3000, avail: true },
+        { id: 10, name: "Vegetable Soup (Efo Riro)", cat: "Soups",  price: 3200, avail: true },
+        { id: 11, name: "Okra Soup",               cat: "Soups",    price: 2800, avail: true },
+        { id: 12, name: "Grilled Chicken (Quarter)", cat: "Grills", price: 4500, avail: true },
+        { id: 13, name: "Suya Platter",            cat: "Grills",   price: 3800, avail: true },
+        { id: 14, name: "Grilled Tilapia (Whole)", cat: "Grills",   price: 6500, avail: true },
+        { id: 15, name: "Fried Turkey",            cat: "Grills",   price: 4000, avail: true },
+        { id: 16, name: "Asun (Spicy Goat Meat)",  cat: "Grills",   price: 4200, avail: true },
+        { id: 17, name: "Fried Plantain",          cat: "Sides",    price: 1500, avail: true },
+        { id: 18, name: "French Fries",            cat: "Sides",    price: 1800, avail: true },
+        { id: 19, name: "Coleslaw",                cat: "Sides",    price: 800,  avail: true },
+        { id: 20, name: "Moi Moi",                 cat: "Sides",    price: 1200, avail: true },
+        { id: 21, name: "Puff Puff (6 pcs)",       cat: "Sides",    price: 1000, avail: true },
+        { id: 22, name: "Chapman",                 cat: "Drinks",   price: 2000, avail: true },
+        { id: 23, name: "Fresh Orange Juice",      cat: "Drinks",   price: 1800, avail: true },
+        { id: 24, name: "Zobo Drink",              cat: "Drinks",   price: 1000, avail: true },
+        { id: 25, name: "Bottled Water (75cl)",    cat: "Drinks",   price: 500,  avail: true },
+        { id: 26, name: "Soft Drink (50cl)",       cat: "Drinks",   price: 800,  avail: true },
+        { id: 27, name: "Malt Drink",              cat: "Drinks",   price: 1200, avail: true },
+        { id: 28, name: "Fruit Salad",             cat: "Desserts", price: 2000, avail: true },
+        { id: 29, name: "Ice Cream (2 scoops)",    cat: "Desserts", price: 1500, avail: true },
+        { id: 30, name: "Chin Chin Bowl",          cat: "Desserts", price: 1000, avail: true }
+      ];
+      var SERVERS = ["Adaeze", "Chidi", "Funke", "Tunde"];
+      var TABLES = ["Table 1", "Table 2", "Table 3", "Table 4", "Table 5", "Table 6", "Table 7", "Table 8", "Takeaway"];
+
+      /* What one serving of each dish costs to make (demo figures — the owner enters real ones) */
+      var COSTS = { 1: 2100, 2: 2300, 3: 1700, 4: 2600, 5: 1900, 6: 2200, 7: 1600, 8: 1900, 9: 1300, 10: 1400,
+                    11: 1200, 12: 2400, 13: 1900, 14: 3400, 15: 2100, 16: 2200, 17: 600, 18: 700, 19: 300, 20: 500,
+                    21: 400, 22: 800, 23: 700, 24: 350, 25: 250, 26: 450, 27: 650, 28: 900, 29: 700, 30: 450 };
+      function dishCost(id) { return COSTS[id] || 0; }
+
+      var nextMenuId = 31;
+      var orderSeq = 118;
+      var orders = [];   // active: {no, table, server, time, hour, status, lines:[{id,name,price,qty}]}
+      var sales = [];    // paid:   {no, table, server, time, hour, method, discount, total, lines:[...]}
+
+      /* Seed: two live orders so Kitchen and Bills are alive on first open */
+      function seedLine(id, qty) {
+        var m = MENU.filter(function (x) { return x.id === id; })[0];
+        return { id: m.id, name: m.name, cat: m.cat, price: m.price, cost: dishCost(m.id), qty: qty };
+      }
+      orders.push(
+        { no: 116, table: "Table 3", server: "Funke", time: "13:42", status: "preparing",
+          lines: [seedLine(1, 2), seedLine(22, 2), seedLine(17, 1)] },
+        { no: 117, table: "Table 5", server: "Chidi", time: "13:55", status: "new",
+          lines: [seedLine(14, 1), seedLine(13, 1), seedLine(24, 2)] }
+      );
+      /* Seed: today's earlier paid orders (demo trading day) */
+      var SEED_SALES = [
+        { no: 104, table: "Table 2", server: "Adaeze", time: "09:15", hour: 9,  method: "Cash",     discount: 0,  lines: [[3, 2], [26, 2]] },
+        { no: 105, table: "Table 6", server: "Chidi",  time: "09:48", hour: 9,  method: "Transfer", discount: 0,  lines: [[1, 1], [22, 1], [20, 1]] },
+        { no: 106, table: "Takeaway", server: "Funke", time: "10:20", hour: 10, method: "Card",     discount: 0,  lines: [[13, 2], [18, 1], [27, 2]] },
+        { no: 107, table: "Table 1", server: "Adaeze", time: "10:57", hour: 10, method: "Cash",     discount: 5,  lines: [[4, 2], [23, 2]] },
+        { no: 108, table: "Table 4", server: "Tunde",  time: "11:31", hour: 11, method: "Transfer", discount: 0,  lines: [[7, 1], [3, 1], [24, 2]] },
+        { no: 109, table: "Table 7", server: "Funke",  time: "12:05", hour: 12, method: "Card",     discount: 0,  lines: [[14, 1], [17, 2], [22, 2]] },
+        { no: 110, table: "Table 3", server: "Chidi",  time: "12:22", hour: 12, method: "Cash",     discount: 10, lines: [[1, 3], [21, 2], [26, 3]] },
+        { no: 111, table: "Table 8", server: "Adaeze", time: "12:40", hour: 12, method: "Transfer", discount: 0,  lines: [[2, 2], [12, 1], [23, 1]] },
+        { no: 112, table: "Takeaway", server: "Tunde", time: "13:02", hour: 13, method: "Card",     discount: 0,  lines: [[6, 1], [16, 1], [27, 1]] },
+        { no: 113, table: "Table 5", server: "Funke",  time: "13:18", hour: 13, method: "Cash",     discount: 0,  lines: [[8, 1], [19, 1], [24, 1]] },
+        { no: 114, table: "Table 2", server: "Chidi",  time: "13:33", hour: 13, method: "Transfer", discount: 5,  lines: [[5, 2], [10, 1], [22, 2]] },
+        { no: 115, table: "Table 6", server: "Adaeze", time: "13:50", hour: 13, method: "Cash",     discount: 0,  lines: [[1, 2], [17, 1], [28, 1]] }
+      ];
+      SEED_SALES.forEach(function (s) {
+        var lines = s.lines.map(function (p) { return seedLine(p[0], p[1]); });
+        var sub = lines.reduce(function (a, l) { return a + l.price * l.qty; }, 0);
+        sales.push({ no: s.no, table: s.table, server: s.server, time: s.time, hour: s.hour,
+                     method: s.method, discount: s.discount,
+                     total: Math.round(sub * (1 - s.discount / 100)), lines: lines });
+      });
+
+      /* ================= Stock, history & users data ================= */
+      function dayStr(offset) {
+        var d = new Date();
+        d.setDate(d.getDate() - offset);
+        return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+      }
+      /* initial = stock on hand at the start of the week; unitCost = buying price per unit;
+         lowAt = level at or below which the item is flagged critical;
+         preUsed = amount already used earlier this week, before today's seeded sales */
+      var STOCK = [
+        { id: "rice",     name: "Rice",        unit: "bag",   initial: 8,  unitCost: 68000, lowAt: 2,   preUsed: 1.2 },
+        { id: "chicken",  name: "Chicken",     unit: "carton", initial: 9, unitCost: 36000, lowAt: 3,   preUsed: 2 },
+        { id: "turkey",   name: "Turkey",      unit: "carton", initial: 4, unitCost: 44000, lowAt: 1.5, preUsed: 0.8 },
+        { id: "goat",     name: "Goat meat",   unit: "kg",    initial: 40, unitCost: 6500,  lowAt: 10,  preUsed: 6 },
+        { id: "catfish",  name: "Catfish",     unit: "kg",    initial: 25, unitCost: 3800,  lowAt: 8,   preUsed: 3 },
+        { id: "tilapia",  name: "Tilapia",     unit: "kg",    initial: 18, unitCost: 4200,  lowAt: 6,   preUsed: 2.5 },
+        { id: "oil",      name: "Palm oil",    unit: "litre", initial: 50, unitCost: 1800,  lowAt: 12,  preUsed: 8 },
+        { id: "plantain", name: "Plantain",    unit: "bunch", initial: 30, unitCost: 2500,  lowAt: 8,   preUsed: 5 },
+        { id: "soft",     name: "Soft drinks", unit: "crate", initial: 20, unitCost: 4500,  lowAt: 5,   preUsed: 4 },
+        { id: "malt",     name: "Malt drinks", unit: "crate", initial: 3,  unitCost: 6500,  lowAt: 1,   preUsed: 1.9 },
+        { id: "oranges",  name: "Oranges",     unit: "crate", initial: 2,  unitCost: 9000,  lowAt: 0.5, preUsed: 0.5 },
+        { id: "zobo",     name: "Zobo leaves", unit: "kg",    initial: 6,  unitCost: 3000,  lowAt: 1.5, preUsed: 1 }
+      ];
+      /* How much of each stock item one serving of a dish uses up */
+      var RECIPES = {
+        1:  [["rice", 0.03], ["chicken", 0.06], ["oil", 0.15]],
+        2:  [["rice", 0.03], ["turkey", 0.06], ["oil", 0.1]],
+        3:  [["rice", 0.03], ["chicken", 0.02], ["oil", 0.2]],
+        4:  [["oil", 0.15], ["goat", 0.05]],
+        5:  [["oil", 0.15]],
+        6:  [["rice", 0.03], ["oil", 0.2]],
+        7:  [["goat", 0.4], ["oil", 0.1]],
+        8:  [["catfish", 0.5], ["oil", 0.1]],
+        12: [["chicken", 0.1]],
+        13: [["goat", 0.15], ["oil", 0.05]],
+        14: [["tilapia", 0.8], ["oil", 0.1]],
+        15: [["turkey", 0.1]],
+        16: [["goat", 0.3], ["oil", 0.1]],
+        17: [["plantain", 0.15], ["oil", 0.1]],
+        22: [["oranges", 0.06]],
+        23: [["oranges", 0.4]],
+        24: [["zobo", 0.15]],
+        26: [["soft", 0.05]],
+        27: [["malt", 0.1]]
+      };
+      var RESTOCKS = [
+        { date: dayStr(5), item: "soft",     qty: 10, cost: 45000, by: "Adaeze" },
+        { date: dayStr(3), item: "chicken",  qty: 2,  cost: 72000, by: "Adaeze" },
+        { date: dayStr(3), item: "plantain", qty: 8,  cost: 20000, by: "Chidi" },
+        { date: dayStr(1), item: "catfish",  qty: 10, cost: 38000, by: "Adaeze" },
+        { date: dayStr(0), item: "plantain", qty: 12, cost: 30000, by: "Chidi" }
+      ];
+      /* Past days' trading for the profit chart (demo history). Restock figures match the restock log above. */
+      var HISTORY = [
+        { off: 6, income: 148500, food: 71200, restock: 0 },
+        { off: 5, income: 162000, food: 76800, restock: 45000 },
+        { off: 4, income: 131750, food: 64900, restock: 0 },
+        { off: 3, income: 178250, food: 83400, restock: 92000 },
+        { off: 2, income: 155500, food: 74100, restock: 0 },
+        { off: 1, income: 189000, food: 88700, restock: 38000 }
+      ];
+      var USERS = [
+        { name: "Adaeze", role: "admin",   pin: "1234" },
+        { name: "Chidi",  role: "manager", pin: "2222" },
+        { name: "Funke",  role: "kitchen", pin: "3333" }
+      ];
+      var ROLE_LBL = { admin: "Admin", manager: "Manager", kitchen: "Kitchen" };
+      var PERMS = {
+        admin:   ["pos", "kitchen", "bills", "dashboard", "stock", "profit", "menu", "users"],
+        manager: ["pos", "kitchen", "bills", "dashboard", "stock"],
+        kitchen: ["kitchen"]
+      };
+      var session = null;      // { name, role } once signed in
+      var signinUser = null;   // name picked on the sign-in screen
+
+      /* ================= State ================= */
+      var selTable = "Table 1";
+      var selCat = "All";
+      var cart = [];              // [{id, qty}]
+      var billNo = null;          // order no. open in the bill panel
+      var billDiscount = 0;
+      var billSplit = 1;
+      var billMethod = "Cash";
+      var lastReceipt = "";
+      var lastReceiptNo = "";
+
+      /* ================= Helpers ================= */
+      function $(id) { return document.getElementById(id); }
+      function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+      function fmt(n) { return "₦" + Math.round(n).toLocaleString("en-NG"); }
+      function menuItem(id) { return MENU.filter(function (m) { return m.id === id; })[0]; }
+      function orderTotal(o) { return o.lines.reduce(function (a, l) { return a + l.price * l.qty; }, 0); }
+      function nowTime() { var d = new Date(); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
+      function initials(name) {
+        var w = name.replace(/\(.*?\)/g, "").trim().split(/\s+/);
+        return (w[0].charAt(0) + (w[1] ? w[1].charAt(0) : "")).toUpperCase();
+      }
+      var toastTimer = null;
+      function toast(msg) {
+        var t = $("toast"); t.textContent = msg; t.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2600);
+      }
+
+      /* ================= Navigation ================= */
+      document.querySelectorAll(".nav-btn").forEach(function (b) {
+        b.addEventListener("click", function () {
+          document.querySelectorAll(".nav-btn").forEach(function (x) { x.classList.remove("active"); });
+          b.classList.add("active");
+          document.querySelectorAll(".view").forEach(function (v) { v.classList.remove("active"); });
+          $("view-" + b.getAttribute("data-view")).classList.add("active");
+          window.scrollTo(0, 0);
+        });
+      });
+      function gotoView(name) {
+        document.querySelector('.nav-btn[data-view="' + name + '"]').click();
+      }
+
+      /* ================= POS ================= */
+      function renderTables() {
+        $("tableRow").innerHTML = TABLES.map(function (t) {
+          var active = orders.filter(function (o) { return o.table === t; });
+          var chip = '<button class="table-chip' + (t === selTable ? " sel" : "") + (active.length ? " busy" : "") + '" data-table="' + esc(t) + '">';
+          chip += '<span class="dot"></span>' + esc(t);
+          if (active.length) chip += '<span class="cnt">' + active.length + "</span>";
+          return chip + "</button>";
+        }).join("");
+        $("tableRow").querySelectorAll("[data-table]").forEach(function (b) {
+          b.addEventListener("click", function () { selTable = b.getAttribute("data-table"); renderPOS(); });
+        });
+        $("cartTitle").textContent = "New order — " + selTable;
+      }
+      function renderCats() {
+        var cats = ["All"].concat(CATS);
+        $("catRow").innerHTML = cats.map(function (c) {
+          return '<button class="cat-btn' + (c === selCat ? " sel" : "") + '" data-cat="' + esc(c) + '">' + esc(c) + "</button>";
+        }).join("");
+        $("catRow").querySelectorAll("[data-cat]").forEach(function (b) {
+          b.addEventListener("click", function () { selCat = b.getAttribute("data-cat"); renderCats(); renderMenuGrid(); });
+        });
+      }
+      function cartQty(id) {
+        var l = cart.filter(function (x) { return x.id === id; })[0];
+        return l ? l.qty : 0;
+      }
+      function renderMenuGrid() {
+        var items = MENU.filter(function (m) { return selCat === "All" || m.cat === selCat; });
+        $("menuGrid").innerHTML = items.map(function (m) {
+          var q = cartQty(m.id);
+          var block = dishBlocker(m);
+          return '<button class="dish' + (block ? " off" : "") + '" data-dish="' + m.id + '"' + (block ? " disabled" : "") + ">"
+            + '<span class="tile" style="background:' + CAT_COLORS[m.cat] + '">' + esc(initials(m.name)) + "</span>"
+            + '<span class="dname">' + esc(m.name) + "</span>"
+            + (!block
+                ? '<span class="dprice">' + fmt(m.price) + "</span>" + (q ? '<span class="in-cart">' + q + " in this order</span>" : "")
+                : '<span class="dprice">' + esc(block) + "</span>")
+            + "</button>";
+        }).join("");
+        $("menuGrid").querySelectorAll("[data-dish]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var id = parseInt(b.getAttribute("data-dish"), 10);
+            var line = cart.filter(function (x) { return x.id === id; })[0];
+            if (line) line.qty += 1; else cart.push({ id: id, qty: 1 });
+            renderCart(); renderMenuGrid();
+          });
+        });
+      }
+      function cartTotal() {
+        return cart.reduce(function (a, l) { var m = menuItem(l.id); return a + (m ? m.price * l.qty : 0); }, 0);
+      }
+      function renderCart() {
+        var box = $("cartLines");
+        if (!cart.length) {
+          box.innerHTML = '<div class="cart-empty">Nothing added yet.<br />Tap a dish to start the order.</div>';
+        } else {
+          box.innerHTML = cart.map(function (l) {
+            var m = menuItem(l.id);
+            return '<div class="cart-line"><div class="lname"><b>' + esc(m.name) + "</b><span>" + fmt(m.price) + ' each</span></div>'
+              + '<span class="qty"><button data-dec="' + m.id + '" aria-label="Remove one">−</button><span class="n">' + l.qty + '</span><button data-inc="' + m.id + '" aria-label="Add one">+</button></span>'
+              + '<span class="ltotal">' + fmt(m.price * l.qty) + "</span></div>";
+          }).join("");
+          box.querySelectorAll("[data-inc]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              cart.filter(function (x) { return x.id === +b.getAttribute("data-inc"); })[0].qty += 1;
+              renderCart(); renderMenuGrid();
+            });
+          });
+          box.querySelectorAll("[data-dec]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              var id = +b.getAttribute("data-dec");
+              var line = cart.filter(function (x) { return x.id === id; })[0];
+              line.qty -= 1;
+              if (line.qty <= 0) cart = cart.filter(function (x) { return x.id !== id; });
+              renderCart(); renderMenuGrid();
+            });
+          });
+        }
+        $("cartTotal").textContent = fmt(cartTotal());
+        $("sendOrder").disabled = !cart.length;
+      }
+      function renderPOS() { renderTables(); renderCats(); renderMenuGrid(); renderCart(); }
+
+      $("serverSel").innerHTML = SERVERS.map(function (s) { return "<option>" + esc(s) + "</option>"; }).join("");
+      $("clearCart").addEventListener("click", function () { cart = []; renderCart(); renderMenuGrid(); });
+      $("sendOrder").addEventListener("click", function () {
+        if (!cart.length) return;
+        var dropped = [];
+        cart = cart.filter(function (l) {
+          var m = menuItem(l.id);
+          if (!m || dishBlocker(m)) { if (m) dropped.push(m.name); return false; }
+          return true;
+        });
+        if (dropped.length) toast("No longer available, removed: " + dropped.join(", "));
+        if (!cart.length) { renderCart(); renderMenuGrid(); return; }
+        var lines = cart.map(function (l) { var m = menuItem(l.id); return { id: m.id, name: m.name, cat: m.cat, price: m.price, cost: dishCost(m.id), qty: l.qty }; });
+        var o = { no: orderSeq++, table: selTable, server: $("serverSel").value, time: nowTime(), status: "new", lines: lines };
+        orders.push(o);
+        cart = [];
+        renderAll();
+        toast("Order #" + o.no + " sent to the kitchen for " + o.table);
+      });
+
+      /* ================= Kitchen ================= */
+      var NEXT = { "new": ["preparing", "Start preparing"], "preparing": ["ready", "Mark ready"], "ready": ["served", "Serve to table"] };
+      var CHIP = { "new": "st-new-chip", "preparing": "st-preparing-chip", "ready": "st-ready-chip" };
+      var CHIPLBL = { "new": "New", "preparing": "Preparing", "ready": "Ready" };
+      function renderKitchen() {
+        var list = orders.filter(function (o) { return o.status !== "served"; });
+        $("kdsEmpty").style.display = list.length ? "none" : "block";
+        $("kdsGrid").innerHTML = list.map(function (o) {
+          var nx = NEXT[o.status];
+          return '<article class="ticket st-' + o.status + '">'
+            + '<div class="ticket-head"><span class="tno">#' + o.no + " · " + esc(o.table) + '</span><span class="ttime">' + esc(o.time) + "</span></div>"
+            + '<div class="tsub">Server: ' + esc(o.server) + ' &nbsp;<span class="status-chip ' + CHIP[o.status] + '">' + CHIPLBL[o.status] + "</span></div>"
+            + "<ul>" + o.lines.map(function (l) { return '<li><span class="q">' + l.qty + '×</span><span>' + esc(l.name) + "</span></li>"; }).join("") + "</ul>"
+            + '<button class="btn ' + (o.status === "ready" ? "btn-green" : "btn-primary") + '" data-adv="' + o.no + '">' + nx[1] + "</button>"
+            + "</article>";
+        }).join("");
+        $("kdsGrid").querySelectorAll("[data-adv]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var o = orders.filter(function (x) { return x.no === +b.getAttribute("data-adv"); })[0];
+            o.status = NEXT[o.status][0];
+            renderAll();
+            if (o.status === "served") toast("Order #" + o.no + " served — ready to bill");
+            else toast("Order #" + o.no + " is now " + o.status);
+          });
+        });
+        var kb = $("kitchenBadge");
+        kb.hidden = !list.length; kb.textContent = list.length;
+      }
+
+      /* ================= Bills ================= */
+      function billable() { return orders.filter(function (o) { return o.status === "ready" || o.status === "served"; }); }
+      function renderBills() {
+        var list = billable();
+        var bb = $("billsBadge");
+        bb.hidden = !list.length; bb.textContent = list.length;
+        if (!list.length) {
+          $("billList").innerHTML = '<div class="empty-note">No bills waiting. When the kitchen marks an order ready and it is served, it lands here for payment.</div>';
+        } else {
+          $("billList").innerHTML = list.map(function (o) {
+            return '<button class="bill-row' + (o.no === billNo ? " sel" : "") + '" data-bill="' + o.no + '">'
+              + '<span class="bmain"><b>#' + o.no + " · " + esc(o.table) + "</b><span>" + esc(o.server) + " · " + esc(o.time) + " · " + o.lines.reduce(function (a, l) { return a + l.qty; }, 0) + " items · " + (o.status === "ready" ? "Ready" : "Served") + "</span></span>"
+              + '<span class="bamt">' + fmt(orderTotal(o)) + "</span></button>";
+          }).join("");
+          $("billList").querySelectorAll("[data-bill]").forEach(function (b) {
+            b.addEventListener("click", function () {
+              billNo = +b.getAttribute("data-bill"); billDiscount = 0; billSplit = 1; billMethod = "Cash";
+              renderBills();
+            });
+          });
+        }
+        renderBillDetail();
+      }
+      function renderBillDetail() {
+        var box = $("billDetail");
+        var o = orders.filter(function (x) { return x.no === billNo; })[0];
+        if (!o) {
+          box.innerHTML = '<h3 style="margin:0 0 8px;font-size:16px">Bill</h3><p style="color:var(--muted);font-size:14px;margin:0">Select an order on the left to see its bill, add a discount, split it, and take payment.</p>';
+          return;
+        }
+        var sub = orderTotal(o);
+        var discAmt = Math.round(sub * billDiscount / 100);
+        var total = sub - discAmt;
+        var perPerson = billSplit > 1 ? Math.ceil(total / billSplit) : total;
+        box.innerHTML = '<h3 style="margin:0 0 4px;font-size:16px">Bill #' + o.no + " — " + esc(o.table) + "</h3>"
+          + '<p style="color:var(--muted);font-size:13px;margin:0 0 10px">Server: ' + esc(o.server) + " · Opened " + esc(o.time) + "</p>"
+          + '<div class="bill-lines">' + o.lines.map(function (l) {
+              return '<div class="bill-line"><span>' + l.qty + " × " + esc(l.name) + '</span><span class="amt">' + fmt(l.price * l.qty) + "</span></div>";
+            }).join("") + "</div>"
+          + '<div class="sum-row"><span>Subtotal</span><span class="amt">' + fmt(sub) + "</span></div>"
+          + (billDiscount ? '<div class="sum-row disc"><span>Discount (' + billDiscount + '%)</span><span class="amt">−' + fmt(discAmt) + "</span></div>" : "")
+          + '<div class="sum-row grand"><span>Total to pay</span><span class="amt">' + fmt(total) + "</span></div>"
+          + '<div class="field-row">'
+          +   '<div class="field"><label for="discIn">Discount %</label><input id="discIn" type="number" min="0" max="50" step="1" value="' + billDiscount + '" /></div>'
+          +   '<div class="field"><label for="splitIn">Split between</label><input id="splitIn" type="number" min="1" max="20" step="1" value="' + billSplit + '" /></div>'
+          + "</div>"
+          + (billSplit > 1 ? '<p class="split-note">Each of the ' + billSplit + " people pays <b>" + fmt(perPerson) + "</b></p>" : "")
+          + '<div class="field"><label>Payment method</label></div>'
+          + '<div class="pay-row">' + ["Cash", "Card", "Transfer"].map(function (m) {
+              return '<button class="pay-btn' + (m === billMethod ? " sel" : "") + '" data-pay="' + m + '">' + m + "</button>";
+            }).join("") + "</div>"
+          + '<button class="btn btn-green" id="settleBtn" style="width:100%">Settle bill — ' + fmt(total) + "</button>";
+        $("discIn").addEventListener("change", function () {
+          billDiscount = Math.min(50, Math.max(0, parseInt(this.value, 10) || 0)); renderBillDetail();
+        });
+        $("splitIn").addEventListener("change", function () {
+          billSplit = Math.min(20, Math.max(1, parseInt(this.value, 10) || 1)); renderBillDetail();
+        });
+        box.querySelectorAll("[data-pay]").forEach(function (b) {
+          b.addEventListener("click", function () { billMethod = b.getAttribute("data-pay"); renderBillDetail(); });
+        });
+        $("settleBtn").addEventListener("click", function () { settleBill(o, sub, discAmt, total); });
+      }
+      function settleBill(o, sub, discAmt, total) {
+        var d = new Date();
+        sales.push({ no: o.no, table: o.table, server: o.server, time: nowTime(), hour: d.getHours(),
+                     method: billMethod, discount: billDiscount, total: total, lines: o.lines });
+        orders = orders.filter(function (x) { return x.no !== o.no; });
+        lastReceipt = buildReceipt(o, sub, discAmt, total);
+        lastReceiptNo = o.no;
+        billNo = null;
+        renderAll();
+        $("receiptText").textContent = lastReceipt;
+        $("receiptOverlay").classList.add("open");
+        toast("Bill #" + o.no + " settled — " + fmt(total) + " by " + billMethod);
+      }
+      function buildReceipt(o, sub, discAmt, total) {
+        var L = [];
+        L.push("        MAMA'S KITCHEN");
+        L.push("      Lekki Phase 1, Lagos");
+        L.push("--------------------------------");
+        L.push("Receipt #" + o.no + "        " + o.time);
+        L.push(o.table + " · Server: " + o.server);
+        L.push("--------------------------------");
+        o.lines.forEach(function (l) {
+          var left = l.qty + " x " + l.name;
+          var right = fmt(l.price * l.qty);
+          while (left.length + right.length < 32) left += " ";
+          L.push(left + right);
+        });
+        L.push("--------------------------------");
+        L.push("Subtotal                " + fmt(sub));
+        if (discAmt) L.push("Discount (" + billDiscount + "%)          -" + fmt(discAmt));
+        L.push("TOTAL                   " + fmt(total));
+        L.push("Paid by " + billMethod);
+        if (billSplit > 1) L.push("Split " + billSplit + " ways — " + fmt(Math.ceil(total / billSplit)) + " each");
+        L.push("--------------------------------");
+        L.push("   Thank you for dining with us!");
+        L.push("      Powered by SwiftServe POS");
+        return L.join("\n");
+      }
+      $("receiptClose").addEventListener("click", function () { $("receiptOverlay").classList.remove("open"); });
+      $("receiptOverlay").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+      $("receiptDownload").addEventListener("click", function () {
+        if (!lastReceipt) { toast("There is no receipt to download yet"); return; }
+        var blob = new Blob(["\ufeff" + lastReceipt], { type: "text/plain;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "swiftserve-receipt-" + (lastReceiptNo || "bill") + ".txt";
+        a.rel = "noopener";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+        /* Keep the object URL alive well past the click: revoking too early
+           cancels the download on slower phones and in-app browsers. */
+        setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 10000);
+        toast("Downloading receipt — if nothing saves, tap Copy receipt");
+      });
+      function legacyCopyReceipt() {
+        var ta = document.createElement("textarea");
+        ta.value = lastReceipt;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed"; ta.style.top = "0"; ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus(); ta.select();
+        var ok = false;
+        try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+        ta.remove();
+        if (ok) toast("Receipt copied — paste it anywhere to keep it");
+        else toast("Copy didn't work here — press and hold the receipt text to copy it");
+      }
+      $("receiptCopy").addEventListener("click", function () {
+        if (!lastReceipt) { toast("There is no receipt to copy yet"); return; }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(lastReceipt).then(
+            function () { toast("Receipt copied — paste it anywhere to keep it"); },
+            function () { legacyCopyReceipt(); }
+          );
+        } else {
+          legacyCopyReceipt();
+        }
+      });
+
+      /* ================= Dashboard ================= */
+      function renderDashboard() {
+        var d = new Date();
+        $("dashDate").textContent = d.toLocaleDateString("en-NG", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) + " · Sales update live as bills are settled.";
+        var totalSales = sales.reduce(function (a, s) { return a + s.total; }, 0);
+        var itemsSold = sales.reduce(function (a, s) { return a + s.lines.reduce(function (x, l) { return x + l.qty; }, 0); }, 0);
+        var avg = sales.length ? totalSales / sales.length : 0;
+        var openCount = orders.length;
+        $("kpis").innerHTML = [
+          ["Today's sales", fmt(totalSales), sales.length + " bills settled"],
+          ["Orders completed", String(sales.length), openCount + " still open"],
+          ["Average bill", fmt(avg), "per settled order"],
+          ["Items sold", String(itemsSold), "across all tables"]
+        ].map(function (k) {
+          return '<div class="kpi"><div class="klbl">' + k[0] + '</div><div class="kval">' + k[1] + '</div><div class="ksub">' + k[2] + "</div></div>";
+        }).join("");
+
+        /* Sales by hour (SVG bars) */
+        var byHour = {};
+        sales.forEach(function (s) { byHour[s.hour] = (byHour[s.hour] || 0) + s.total; });
+        var hours = Object.keys(byHour).map(Number).sort(function (a, b) { return a - b; });
+        if (!hours.length) hours = [d.getHours()];
+        var maxH = Math.max.apply(null, hours.map(function (h) { return byHour[h] || 0; }).concat([1]));
+        var W = 520, H = 190, base = 158, bw = Math.min(52, (W - 40) / hours.length - 12);
+        var svg = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Bar chart of sales by hour">';
+        hours.forEach(function (h, i) {
+          var v = byHour[h] || 0;
+          var bh = Math.max(3, (v / maxH) * 118);
+          var x = 30 + i * ((W - 50) / hours.length) + ((W - 50) / hours.length - bw) / 2;
+          var lbl = (h % 12 === 0 ? 12 : h % 12) + (h < 12 ? "am" : "pm");
+          svg += '<rect x="' + x.toFixed(1) + '" y="' + (base - bh).toFixed(1) + '" width="' + bw + '" height="' + bh.toFixed(1) + '" rx="5" fill="#c8500f"><title>' + lbl + " — " + fmt(v) + "</title></rect>";
+          svg += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (base - bh - 6).toFixed(1) + '" text-anchor="middle" font-size="10.5" fill="currentColor" font-family="IBM Plex Mono, monospace">' + (v >= 1000 ? "₦" + Math.round(v / 1000) + "k" : fmt(v)) + "</text>";
+          svg += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (base + 18) + '" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.65">' + lbl + "</text>";
+        });
+        svg += '<line x1="16" y1="' + base + '" x2="' + (W - 10) + '" y2="' + base + '" stroke="currentColor" opacity="0.25" /></svg>';
+        $("hourChart").innerHTML = svg;
+
+        /* Best sellers */
+        var qtyByItem = {};
+        sales.forEach(function (s) { s.lines.forEach(function (l) { qtyByItem[l.name] = (qtyByItem[l.name] || 0) + l.qty; }); });
+        var best = Object.keys(qtyByItem).map(function (n) { return [n, qtyByItem[n]]; })
+          .sort(function (a, b) { return b[1] - a[1]; }).slice(0, 6);
+        var maxQ = best.length ? best[0][1] : 1;
+        $("bestSellers").innerHTML = best.map(function (b) {
+          return '<div class="bar-row"><span class="bname">' + esc(b[0]) + '</span><span class="bar-track"><span class="bar-fill" style="display:block;width:' + Math.round(b[1] / maxQ * 100) + '%"></span></span><span class="bval">' + b[1] + " sold</span></div>";
+        }).join("") || '<p style="color:var(--muted)">No sales yet today.</p>';
+
+        /* Sales by category */
+        var revByCat = {};
+        sales.forEach(function (s) { s.lines.forEach(function (l) { revByCat[l.cat] = (revByCat[l.cat] || 0) + l.price * l.qty; }); });
+        var cats = Object.keys(revByCat).map(function (c) { return [c, revByCat[c]]; }).sort(function (a, b) { return b[1] - a[1]; });
+        var maxC = cats.length ? cats[0][1] : 1;
+        $("catSales").innerHTML = cats.map(function (c) {
+          return '<div class="bar-row"><span class="bname">' + esc(c[0]) + '</span><span class="bar-track"><span class="bar-fill cat" style="display:block;width:' + Math.round(c[1] / maxC * 100) + '%"></span></span><span class="bval">' + fmt(c[1]) + "</span></div>";
+        }).join("") || '<p style="color:var(--muted)">No sales yet today.</p>';
+
+        /* Recent payments */
+        var recent = sales.slice(-7).reverse();
+        $("recentTxns").innerHTML = recent.map(function (s) {
+          return '<div class="txn"><span class="tmain"><b>#' + s.no + " · " + esc(s.table) + "</b><span>" + esc(s.time) + " · " + esc(s.server) + " · " + s.lines.reduce(function (a, l) { return a + l.qty; }, 0) + ' items</span></span><span class="method-chip">' + esc(s.method) + '</span><span class="tamt">' + fmt(s.total) + "</span></div>";
+        }).join("") || '<p style="color:var(--muted)">No payments yet today.</p>';
+      }
+
+      /* ================= Menu manager ================= */
+      $("newCat").innerHTML = CATS.map(function (c) { return "<option>" + esc(c) + "</option>"; }).join("");
+      function renderMenuManager() {
+        var html = "";
+        CATS.forEach(function (c) {
+          var items = MENU.filter(function (m) { return m.cat === c; });
+          if (!items.length) return;
+          html += '<div class="mgr-cat">' + esc(c) + "</div>";
+          html += items.map(function (m) {
+            return '<div class="mgr-row"><span class="mname' + (m.avail ? "" : " off") + '">' + esc(m.name) + "</span>"
+              + '<span class="mini-lbl">Price ₦</span><input class="price-in" type="number" min="0" step="50" value="' + m.price + '" data-price="' + m.id + '" aria-label="Price for ' + esc(m.name) + '" />'
+              + '<span class="mini-lbl">Cost ₦</span><input class="price-in" type="number" min="0" step="50" value="' + dishCost(m.id) + '" data-cost="' + m.id + '" aria-label="Cost to make ' + esc(m.name) + '" />'
+              + '<button class="avail-btn' + (m.avail ? "" : " off") + '" data-avail="' + m.id + '">' + (m.avail ? "Available" : "Sold out") + "</button>"
+              + '<button class="del-btn" data-del="' + m.id + '" aria-label="Delete ' + esc(m.name) + '">×</button></div>';
+          }).join("");
+        });
+        $("mgrList").innerHTML = html;
+        $("mgrList").querySelectorAll("[data-price]").forEach(function (inp) {
+          inp.addEventListener("change", function () {
+            var m = menuItem(+inp.getAttribute("data-price"));
+            var v = Math.max(0, parseInt(inp.value, 10) || 0);
+            m.price = v; inp.value = v;
+            renderMenuGrid(); renderCart();
+            toast(m.name + " is now " + fmt(v));
+          });
+        });
+        $("mgrList").querySelectorAll("[data-cost]").forEach(function (inp) {
+          inp.addEventListener("change", function () {
+            var m = menuItem(+inp.getAttribute("data-cost"));
+            var v = Math.max(0, parseInt(inp.value, 10) || 0);
+            COSTS[m.id] = v; inp.value = v;
+            toast(m.name + " now costs " + fmt(v) + " to make");
+          });
+        });
+        $("mgrList").querySelectorAll("[data-avail]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var m = menuItem(+b.getAttribute("data-avail"));
+            m.avail = !m.avail;
+            if (!m.avail) cart = cart.filter(function (x) { return x.id !== m.id; });
+            renderMenuManager(); renderMenuGrid(); renderCart();
+          });
+        });
+        $("mgrList").querySelectorAll("[data-del]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var id = +b.getAttribute("data-del");
+            var m = menuItem(id);
+            MENU = MENU.filter(function (x) { return x.id !== id; });
+            cart = cart.filter(function (x) { return x.id !== id; });
+            renderMenuManager(); renderMenuGrid(); renderCart();
+            toast(m.name + " removed from the menu");
+          });
+        });
+      }
+      $("addForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var name = $("newName").value.trim();
+        var price = parseInt($("newPrice").value, 10);
+        if (!name || !price || price <= 0) return;
+        var nid = nextMenuId++;
+        MENU.push({ id: nid, name: name, cat: $("newCat").value, price: price, avail: true });
+        COSTS[nid] = Math.max(0, parseInt($("newCost").value, 10) || 0);
+        $("newName").value = ""; $("newPrice").value = ""; $("newCost").value = "";
+        renderMenuManager(); renderMenuGrid();
+        toast(name + " added to the menu at " + fmt(price));
+      });
+
+      /* ================= Stock engine ================= */
+      function stockItem(id) { return STOCK.filter(function (s) { return s.id === id; })[0]; }
+      function fmtQty(n) { return String(Math.round(n * 100) / 100); }
+      function stockUsed(id) {
+        var used = stockItem(id).preUsed;
+        sales.forEach(function (s) {
+          s.lines.forEach(function (l) {
+            var r = RECIPES[l.id];
+            if (!r) return;
+            r.forEach(function (p) { if (p[0] === id) used += p[1] * l.qty; });
+          });
+        });
+        return used;
+      }
+      function stockRestocked(id) {
+        return RESTOCKS.filter(function (r) { return r.item === id; }).reduce(function (a, r) { return a + r.qty; }, 0);
+      }
+      function stockLeft(id) {
+        var it = stockItem(id);
+        return Math.max(0, it.initial + stockRestocked(id) - stockUsed(id));
+      }
+      function stockStatus(id) {
+        var left = stockLeft(id);
+        if (left <= 0.001) return "finished";
+        if (left <= stockItem(id).lowAt) return "critical";
+        return "ok";
+      }
+      var STATUS_LBL = { ok: "In stock", critical: "Critical — low", finished: "Finished" };
+      /* Why a dish cannot be sold right now, or null when it can */
+      function dishBlocker(m) {
+        if (!m.avail) return "Sold out";
+        var r = RECIPES[m.id];
+        if (!r) return null;
+        for (var i = 0; i < r.length; i++) {
+          if (stockLeft(r[i][0]) <= 0.001) return stockItem(r[i][0]).name + " finished";
+        }
+        return null;
+      }
+      function dateLbl(iso) {
+        return new Date(iso + "T12:00:00").toLocaleDateString("en-NG", { day: "numeric", month: "short" });
+      }
+      function kpiHtml(list) {
+        return list.map(function (k) {
+          return '<div class="kpi"><div class="klbl">' + k[0] + '</div><div class="kval">' + k[1] + '</div><div class="ksub">' + k[2] + "</div></div>";
+        }).join("");
+      }
+
+      /* ================= Stock view ================= */
+      function renderStock() {
+        var isAdmin = !!session && session.role === "admin";
+        var crit = STOCK.filter(function (s) { return stockStatus(s.id) === "critical"; });
+        var fin = STOCK.filter(function (s) { return stockStatus(s.id) === "finished"; });
+        var kpis = [
+          ["Items tracked", String(STOCK.length), "ingredients on the stock list"],
+          ["Critical — running low", String(crit.length), crit.length ? crit.map(function (s) { return s.name; }).join(", ") : "nothing running low"],
+          ["Finished — out of stock", String(fin.length), fin.length ? fin.map(function (s) { return s.name; }).join(", ") : "nothing has finished"]
+        ];
+        if (isAdmin) {
+          var value = STOCK.reduce(function (a, s) { return a + stockLeft(s.id) * s.unitCost; }, 0);
+          kpis.push(["Value of stock on hand", fmt(value), "at buying prices"]);
+        } else {
+          kpis.push(["In good supply", String(STOCK.length - crit.length - fin.length), "items at a healthy level"]);
+        }
+        $("stockKpis").innerHTML = kpiHtml(kpis);
+
+        $("stockList").innerHTML = STOCK.map(function (s) {
+          var left = stockLeft(s.id), used = stockUsed(s.id), restocked = stockRestocked(s.id);
+          var total = s.initial + restocked;
+          var pct = total > 0 ? Math.max(0, Math.min(100, left / total * 100)) : 0;
+          var st = stockStatus(s.id);
+          var figs = '<span>Started <b>' + fmtQty(s.initial) + "</b></span>"
+            + '<span>Restocked <b>+' + fmtQty(restocked) + "</b></span>"
+            + '<span>Used <b>' + fmtQty(used) + "</b></span>"
+            + (isAdmin
+                ? '<span>Buying price <b>' + fmt(s.unitCost) + "</b> per " + esc(s.unit) + "</span>"
+                  + '<span>Worth now <b>' + fmt(left * s.unitCost) + "</b></span>"
+                : "");
+          return '<div class="stock-row"><div class="stock-top"><span class="sname">' + esc(s.name)
+            + ' <span style="color:var(--muted);font-weight:600;font-size:12.5px">(' + esc(s.unit) + ")</span></span>"
+            + '<span class="status-chip st-' + st + '-chip">' + STATUS_LBL[st] + "</span>"
+            + '<span class="sleft">' + fmtQty(left) + " left</span></div>"
+            + '<div class="level-track"><div class="level-fill' + (st === "ok" ? "" : " " + st) + '" style="width:' + pct.toFixed(1) + '%"></div></div>'
+            + '<div class="stock-figs">' + figs + "</div></div>";
+        }).join("");
+
+        var sel = $("restockItem");
+        var cur = sel.value;
+        sel.innerHTML = STOCK.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + " (" + esc(s.unit) + ")</option>"; }).join("");
+        if (cur) sel.value = cur;
+
+        var log = RESTOCKS.slice().reverse();
+        $("restockLog").innerHTML = log.map(function (r) {
+          var it = stockItem(r.item);
+          return '<div class="txn"><span class="tmain"><b>' + esc(it.name) + "</b><span>" + dateLbl(r.date) + " · added by " + esc(r.by) + "</span></span>"
+            + (isAdmin ? '<span style="color:var(--muted);font-family:\'IBM Plex Mono\',monospace;font-size:13px">' + fmt(r.cost) + "</span>" : "")
+            + '<span class="tamt">+' + fmtQty(r.qty) + " " + esc(it.unit) + "</span></div>";
+        }).join("") || '<p style="color:var(--muted)">No restocks recorded yet.</p>';
+      }
+      $("restockForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var item = $("restockItem").value;
+        var qty = parseFloat($("restockQty").value);
+        var cost = parseInt($("restockCost").value, 10);
+        if (!item || !(qty > 0) || isNaN(cost) || cost < 0) { toast("Enter a quantity and the amount paid"); return; }
+        RESTOCKS.push({ date: dayStr(0), item: item, qty: qty, cost: cost, by: session ? session.name : "—" });
+        $("restockQty").value = ""; $("restockCost").value = "";
+        renderAll();
+        toast(stockItem(item).name + " restocked — +" + fmtQty(qty) + " " + stockItem(item).unit);
+      });
+
+      /* ================= Profit view ================= */
+      function todayFigures() {
+        var income = sales.reduce(function (a, s) { return a + s.total; }, 0);
+        var food = sales.reduce(function (a, s) {
+          return a + s.lines.reduce(function (x, l) { return x + (l.cost || 0) * l.qty; }, 0);
+        }, 0);
+        var restock = RESTOCKS.filter(function (r) { return r.date === dayStr(0); })
+          .reduce(function (a, r) { return a + r.cost; }, 0);
+        return { income: income, food: food, restock: restock, profit: income - food - restock };
+      }
+      function renderProfit() {
+        var t = todayFigures();
+        var margin = t.income > 0 ? Math.round(t.profit / t.income * 100) : 0;
+        $("profitKpis").innerHTML = kpiHtml([
+          ["Income today", fmt(t.income), sales.length + " bills settled"],
+          ["Cost of food sold", fmt(t.food), "what today's dishes cost to make"],
+          ["Restock spend today", fmt(t.restock), "cash spent topping up stock"],
+          ["Profit today", fmt(t.profit), margin + "% of income kept as profit"]
+        ]);
+
+        var days = HISTORY.map(function (h) {
+          return {
+            lbl: new Date(dayStr(h.off) + "T12:00:00").toLocaleDateString("en-NG", { weekday: "short" }),
+            income: h.income, costs: h.food + h.restock, profit: h.income - h.food - h.restock
+          };
+        });
+        days.push({ lbl: "Today", income: t.income, costs: t.food + t.restock, profit: t.profit });
+
+        var maxV = 0;
+        days.forEach(function (d) { maxV = Math.max(maxV, d.income, d.costs); });
+        maxV = Math.max(50000, Math.ceil(maxV / 50000) * 50000);
+        var W = 560, H = 264, base = 224, top = 30, left = 46, right = W - 6;
+        var plotH = base - top;
+        function Y(v) { return base - (v / maxV) * plotH; }
+        var svg = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Bar chart of daily income against costs, with a line showing daily profit">';
+        [0, 0.5, 1].forEach(function (f) {
+          var y = Y(maxV * f);
+          svg += '<line x1="' + left + '" y1="' + y.toFixed(1) + '" x2="' + right + '" y2="' + y.toFixed(1) + '" stroke="currentColor" opacity="' + (f === 0 ? 0.3 : 0.12) + '" />';
+          svg += '<text x="' + (left - 6) + '" y="' + (y + 3.5).toFixed(1) + '" text-anchor="end" font-size="10" fill="currentColor" opacity="0.65" font-family="IBM Plex Mono, monospace">' + (f === 0 ? "₦0" : "₦" + Math.round(maxV * f / 1000) + "k") + "</text>";
+        });
+        var gw = (right - left) / days.length;
+        var bw = Math.min(24, gw * 0.3);
+        var pts = [];
+        days.forEach(function (d, i) {
+          var cx = left + gw * i + gw / 2;
+          var xi = cx - bw - 2, xc = cx + 2;
+          svg += '<rect x="' + xi.toFixed(1) + '" y="' + Y(d.income).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (base - Y(d.income)).toFixed(1) + '" rx="4" fill="#177245"><title>' + d.lbl + " — income " + fmt(d.income) + "</title></rect>";
+          svg += '<rect x="' + xc.toFixed(1) + '" y="' + Y(d.costs).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + (base - Y(d.costs)).toFixed(1) + '" rx="4" fill="#b3372a"><title>' + d.lbl + " — costs " + fmt(d.costs) + "</title></rect>";
+          svg += '<text x="' + (xi + bw / 2).toFixed(1) + '" y="' + (Y(d.income) - 5).toFixed(1) + '" text-anchor="middle" font-size="9" fill="currentColor" font-family="IBM Plex Mono, monospace">' + Math.round(d.income / 1000) + "k</text>";
+          svg += '<text x="' + (xc + bw / 2).toFixed(1) + '" y="' + (Y(d.costs) - 5).toFixed(1) + '" text-anchor="middle" font-size="9" fill="currentColor" font-family="IBM Plex Mono, monospace">' + Math.round(d.costs / 1000) + "k</text>";
+          var py = Math.max(top, Math.min(base, Y(d.profit)));
+          pts.push(cx.toFixed(1) + "," + py.toFixed(1));
+          svg += '<text x="' + cx.toFixed(1) + '" y="' + (base + 18) + '" text-anchor="middle" font-size="11" fill="currentColor" opacity="0.7">' + d.lbl + "</text>";
+        });
+        svg += '<polyline points="' + pts.join(" ") + '" fill="none" stroke="#c8500f" stroke-width="2.5" stroke-linejoin="round" />';
+        days.forEach(function (d, i) {
+          var cx = left + gw * i + gw / 2;
+          var py = Math.max(top, Math.min(base, Y(d.profit)));
+          svg += '<circle cx="' + cx.toFixed(1) + '" cy="' + py.toFixed(1) + '" r="3.5" fill="#c8500f"><title>' + d.lbl + " — profit " + fmt(d.profit) + "</title></circle>";
+          svg += '<text x="' + cx.toFixed(1) + '" y="' + (py - 9).toFixed(1) + '" text-anchor="middle" font-size="10" font-weight="700" fill="#c8500f" font-family="IBM Plex Mono, monospace">₦' + Math.round(d.profit / 1000) + "k</text>";
+        });
+        svg += "</svg>";
+        $("profitChart").innerHTML = svg;
+        $("profitNote").textContent = "Profit = income from settled bills − cost of the food sold − money spent restocking. Today is counted live, as bills are settled and restocks are recorded.";
+
+        var inc = Math.max(1, t.income);
+        var fp = Math.max(0, t.food / inc * 100), rp = Math.max(0, t.restock / inc * 100), pp = Math.max(0, t.profit / inc * 100);
+        $("profitBreakdown").innerHTML =
+          '<div class="stack-bar"><span style="width:' + fp.toFixed(1) + '%;background:var(--amber)"></span><span style="width:' + rp.toFixed(1) + '%;background:var(--blue)"></span><span style="width:' + pp.toFixed(1) + '%;background:var(--green)"></span></div>'
+          + [["Food cost", t.food, "var(--amber)"], ["Restocking", t.restock, "var(--blue)"], ["Profit kept", t.profit, "var(--green)"]].map(function (r) {
+              return '<div class="sum-row"><span><span style="display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:7px;background:' + r[2] + '"></span>' + r[0] + '</span><span class="amt">' + fmt(r[1]) + "</span></div>";
+            }).join("")
+          + '<div class="sum-row grand"><span>Income</span><span class="amt">' + fmt(t.income) + "</span></div>";
+
+        var attn = STOCK.filter(function (s) { return stockStatus(s.id) !== "ok"; });
+        $("profitAttention").innerHTML = attn.length ? attn.map(function (s) {
+          var st = stockStatus(s.id);
+          return '<div class="attn-row"><span class="aname">' + esc(s.name) + '</span><span class="aleft">' + fmtQty(stockLeft(s.id)) + " " + esc(s.unit) + ' left</span><span class="status-chip st-' + st + '-chip">' + STATUS_LBL[st] + '</span><button class="btn btn-ghost btn-sm" data-gostock="1">Restock</button></div>';
+        }).join("") : '<p style="color:var(--muted);margin:0">All stock is at a healthy level.</p>';
+        $("profitAttention").querySelectorAll("[data-gostock]").forEach(function (b) {
+          b.addEventListener("click", function () { gotoView("stock"); });
+        });
+      }
+
+      /* ================= Users & sign-in ================= */
+      function renderUsers() {
+        $("userList").innerHTML = USERS.map(function (u, i) {
+          return '<div class="user-row"><span class="uname">' + esc(u.name) + "</span>"
+            + '<span class="role-chip role-' + u.role + '">' + ROLE_LBL[u.role] + "</span>"
+            + '<select data-urole="' + i + '" aria-label="Role for ' + esc(u.name) + '">'
+            + ["admin", "manager", "kitchen"].map(function (r) {
+                return '<option value="' + r + '"' + (r === u.role ? " selected" : "") + ">" + ROLE_LBL[r] + "</option>";
+              }).join("") + "</select>"
+            + '<span class="mini-lbl">PIN</span><input class="pin-in" type="text" inputmode="numeric" maxlength="8" value="' + esc(u.pin) + '" data-upin="' + i + '" aria-label="PIN for ' + esc(u.name) + '" />'
+            + (session && u.name === session.name
+                ? '<span style="color:var(--muted);font-size:12.5px">Signed in</span>'
+                : '<button class="del-btn" data-udel="' + i + '" aria-label="Remove ' + esc(u.name) + '">×</button>')
+            + "</div>";
+        }).join("");
+        $("userList").querySelectorAll("[data-urole]").forEach(function (sel) {
+          sel.addEventListener("change", function () {
+            var u = USERS[+sel.getAttribute("data-urole")];
+            if (u.role === "admin" && sel.value !== "admin" && USERS.filter(function (x) { return x.role === "admin"; }).length <= 1) {
+              toast("There must always be at least one Admin");
+              renderUsers();
+              return;
+            }
+            u.role = sel.value;
+            renderUsers(); renderStaffList();
+            toast(u.name + " is now " + ROLE_LBL[u.role]);
+          });
+        });
+        $("userList").querySelectorAll("[data-upin]").forEach(function (inp) {
+          inp.addEventListener("change", function () {
+            var u = USERS[+inp.getAttribute("data-upin")];
+            var v = inp.value.trim();
+            if (v.length < 4) { toast("PINs need at least 4 characters"); inp.value = u.pin; return; }
+            u.pin = v;
+            toast("PIN updated for " + u.name);
+          });
+        });
+        $("userList").querySelectorAll("[data-udel]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            var idx = +b.getAttribute("data-udel");
+            var u = USERS[idx];
+            if (u.role === "admin" && USERS.filter(function (x) { return x.role === "admin"; }).length <= 1) {
+              toast("There must always be at least one Admin");
+              return;
+            }
+            USERS.splice(idx, 1);
+            renderUsers(); renderStaffList();
+            toast(u.name + " removed");
+          });
+        });
+      }
+      $("addUserForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var name = $("newUserName").value.trim();
+        var pin = $("newUserPin").value.trim();
+        if (!name || pin.length < 4) { toast("Give the user a name and a PIN of at least 4 characters"); return; }
+        if (USERS.some(function (u) { return u.name.toLowerCase() === name.toLowerCase(); })) { toast("There is already a user with that name"); return; }
+        USERS.push({ name: name, role: $("newUserRole").value, pin: pin });
+        $("newUserName").value = ""; $("newUserPin").value = "";
+        renderUsers(); renderStaffList();
+        toast(name + " added — they can sign in now");
+      });
+
+      function renderStaffList() {
+        $("staffList").innerHTML = USERS.map(function (u) {
+          return '<button type="button" class="staff-btn' + (signinUser === u.name ? " sel" : "") + '" data-staff="' + esc(u.name) + '"><span>' + esc(u.name) + '</span><span class="role-chip role-' + u.role + '">' + ROLE_LBL[u.role] + "</span></button>";
+        }).join("");
+        $("staffList").querySelectorAll("[data-staff]").forEach(function (b) {
+          b.addEventListener("click", function () {
+            signinUser = b.getAttribute("data-staff");
+            $("pinForm").hidden = false;
+            $("pinError").hidden = true;
+            $("pinLabel").textContent = "PIN for " + signinUser;
+            $("pinInput").value = "";
+            renderStaffList();
+            $("pinInput").focus();
+          });
+        });
+      }
+      function applyRole() {
+        var perms = PERMS[session.role];
+        document.querySelectorAll(".nav-btn").forEach(function (b) {
+          b.style.display = perms.indexOf(b.getAttribute("data-view")) >= 0 ? "" : "none";
+        });
+        $("sessionName").textContent = session.name;
+        var rc = $("sessionRole");
+        rc.textContent = ROLE_LBL[session.role];
+        rc.className = "role-chip role-" + session.role;
+        $("sessionBar").hidden = false;
+        gotoView(perms[0]);
+      }
+      $("pinForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var u = USERS.filter(function (x) { return x.name === signinUser; })[0];
+        if (!u) return;
+        if ($("pinInput").value === u.pin) {
+          session = { name: u.name, role: u.role };
+          $("signinOverlay").classList.remove("open");
+          applyRole();
+          renderAll();
+          toast("Welcome, " + u.name + " — signed in as " + ROLE_LBL[u.role]);
+        } else {
+          $("pinError").hidden = false;
+          $("pinInput").value = "";
+          $("pinInput").focus();
+        }
+      });
+      $("signOutBtn").addEventListener("click", function () {
+        session = null;
+        signinUser = null;
+        $("sessionBar").hidden = true;
+        $("pinForm").hidden = true;
+        $("pinInput").value = "";
+        $("pinError").hidden = true;
+        renderStaffList();
+        $("signinOverlay").classList.add("open");
+        window.scrollTo(0, 0);
+      });
+
+      /* ================= Trial timer (120 minutes from first open) ================= */
+      var TRIAL_KEY = "swiftserve_trial_start_v2";
+      var TRIAL_MS = 120 * 60 * 1000;
+      var trialStart = null;
+      try {
+        var storedStart = window.localStorage.getItem(TRIAL_KEY);
+        trialStart = storedStart ? parseInt(storedStart, 10) : NaN;
+        if (!isFinite(trialStart) || trialStart <= 0 || trialStart > Date.now()) {
+          trialStart = Date.now();
+          window.localStorage.setItem(TRIAL_KEY, String(trialStart));
+        }
+      } catch (e) {
+        /* Storage unavailable (e.g. private mode): trial runs from this open. */
+        trialStart = Date.now();
+      }
+      var trialTimer = null;
+      function fmtCountdown(ms) {
+        var s = Math.max(0, Math.ceil(ms / 1000));
+        var h = Math.floor(s / 3600);
+        var m = Math.floor((s % 3600) / 60);
+        var sec = s % 60;
+        return h + ":" + ("0" + m).slice(-2) + ":" + ("0" + sec).slice(-2);
+      }
+      function lockTrial() {
+        if (trialTimer) { clearInterval(trialTimer); trialTimer = null; }
+        $("trialTime").textContent = "0:00:00";
+        $("trialFill").style.width = "0%";
+        $("trialBar").classList.add("warn");
+        document.body.classList.add("trial-expired");
+        $("trialLock").classList.add("open");
+      }
+      function tickTrial() {
+        var remaining = TRIAL_MS - (Date.now() - trialStart);
+        if (remaining <= 0) { lockTrial(); return; }
+        $("trialTime").textContent = fmtCountdown(remaining);
+        $("trialFill").style.width = (remaining / TRIAL_MS * 100).toFixed(2) + "%";
+        $("trialBar").classList.toggle("warn", remaining < 30 * 60 * 1000);
+      }
+      tickTrial();
+      if (!$("trialLock").classList.contains("open")) {
+        trialTimer = setInterval(tickTrial, 1000);
+      }
+
+      /* ================= Boot ================= */
+      function renderAll() {
+        renderPOS(); renderKitchen(); renderBills(); renderDashboard(); renderMenuManager();
+        renderStock(); renderProfit(); renderUsers();
+      }
+      renderAll();
+      renderStaffList();
+    </script>
+  </body>
+</html>
