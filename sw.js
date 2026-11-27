@@ -1,6 +1,6 @@
 /* SwiftServe POS service worker — caches the app shell so the POS
    keeps working offline after the first visit. */
-var CACHE = "swiftserve-pos-v1";
+var CACHE = "swiftserve-pos-server-v1";
 var CORE = [
   "./index.html",
   "manifest.webmanifest",
@@ -33,6 +33,20 @@ self.addEventListener("activate", function (event) {
 
 self.addEventListener("fetch", function (event) {
   if (event.request.method !== "GET") return;
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).then(function (res) {
+        var copy = res.clone();
+        caches.open(CACHE).then(function (cache) {
+          cache.put("./index.html", copy).catch(function () { /* skip */ });
+        });
+        return res;
+      }).catch(function () {
+        return caches.match("./index.html", { ignoreSearch: true });
+      })
+    );
+    return;
+  }
   event.respondWith(
     caches.match(event.request, { ignoreSearch: true }).then(function (hit) {
       if (hit) return hit;
