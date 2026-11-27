@@ -1145,6 +1145,7 @@
         if (!session) return STATIONS;
         if (session.role === "bar") return ["bar"];
         if (session.role === "lounge") return ["lounge"];
+        if (session.role === "kitchen") return ["kitchen"];
         return STATIONS;
       }
       function renderKitchen() {
