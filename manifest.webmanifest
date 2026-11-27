@@ -1,0 +1,30 @@
+{
+  "background_color": "#0d2b1d",
+  "description": "Restaurant point of sale \u2014 orders, kitchen display, bills, stock and profit reports.",
+  "display": "standalone",
+  "icons": [
+    {
+      "purpose": "any",
+      "sizes": "192x192",
+      "src": "icon-192.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "any",
+      "sizes": "512x512",
+      "src": "icon-512.png",
+      "type": "image/png"
+    },
+    {
+      "purpose": "maskable",
+      "sizes": "512x512",
+      "src": "icon-maskable-512.png",
+      "type": "image/png"
+    }
+  ],
+  "name": "SwiftServe POS",
+  "scope": "./",
+  "short_name": "SwiftServe",
+  "start_url": "./index.html",
+  "theme_color": "#0d2b1d"
+}

@@ -4,7 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <link rel="icon" href="data:," />
+    <meta name="theme-color" content="#0d2b1d" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="192x192" href="data:image/png;base64,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" />
+    <link rel="apple-touch-icon" href="data:image/png;base64,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" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SwiftServe" />
     <title>SwiftServe POS</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -313,6 +320,35 @@
       .trial-track { flex: 1 1 140px; min-width: 120px; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
       .trial-fill { height: 100%; background: var(--green); border-radius: 4px; transition: width 1s linear; }
       .trial-bar.warn .trial-fill { background: var(--amber); }
+
+      /* ---------- Install (PWA) ---------- */
+      .install-bar {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+        background: var(--green-soft); border: 1px solid var(--line);
+        border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
+      }
+      .install-bar[hidden] { display: none; }
+      .install-ic {
+        width: 38px; height: 38px; flex: 0 0 auto; border-radius: 10px;
+        background: var(--green); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .install-ic svg { width: 20px; height: 20px; }
+      .install-txt { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+      .install-txt b { font-size: 15px; }
+      .install-txt span { font-size: 13px; color: var(--muted); line-height: 1.45; }
+      .install-bar .btn-primary { width: auto; }
+      .install-x {
+        background: transparent; border: 0; color: var(--muted);
+        font-size: 22px; line-height: 1; padding: 4px 10px;
+      }
+      .install-signin-btn { width: 100%; margin-top: 12px; }
+      .install-note {
+        font-size: 13px; color: var(--muted); line-height: 1.55;
+        background: var(--surface-2); border: 1px solid var(--line);
+        border-radius: 10px; padding: 10px 12px; margin: 12px 0 0;
+      }
+      .install-note[hidden] { display: none; }
       .trial-lock {
         position: fixed; inset: 0; z-index: 100;
         background: var(--bg);
@@ -481,6 +517,19 @@
         <div class="session-bar" id="sessionBar" hidden>
           <span>Signed in as <b id="sessionName"></b> <span class="role-chip" id="sessionRole"></span></span>
           <button class="btn btn-ghost btn-sm" id="signOutBtn">Sign out</button>
+        </div>
+
+        <!-- ============ INSTALL ============ -->
+        <div class="install-bar" id="installBar" hidden>
+          <span class="install-ic" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 21h16"/></svg>
+          </span>
+          <div class="install-txt">
+            <b>Install SwiftServe POS</b>
+            <span id="installMsg">Put it on your home screen — it opens like a real app and works offline.</span>
+          </div>
+          <button class="btn btn-primary btn-sm" id="installBtn" type="button">Install app</button>
+          <button class="install-x" id="installDismiss" type="button" aria-label="Dismiss install message">&times;</button>
         </div>
 
         <!-- ============ TRIAL ============ -->
@@ -686,6 +735,8 @@
           <button class="btn btn-primary" type="submit">Sign in</button>
         </form>
         <div class="demo-pins">Demo PINs — Admin <b>1234</b> · Manager <b>2222</b> · Kitchen <b>3333</b><br />The Admin can change these under Users &amp; access.</div>
+        <button class="btn btn-ghost install-signin-btn js-install" id="installBtnSignin" type="button" hidden>Install app on this device</button>
+        <p class="install-note" id="iosNote" hidden>On iPhone or iPad: tap the <b>Share</b> button in your browser, then tap <b>Add to Home Screen</b>. SwiftServe POS will sit on your home screen like a normal app.</p>
       </div>
     </div>
 
@@ -1639,7 +1690,7 @@
       });
 
       /* ================= Trial timer (120 minutes from first open) ================= */
-      var TRIAL_KEY = "swiftserve_trial_start_v2";
+      var TRIAL_KEY = "swiftserve_trial_start_v3";
       var TRIAL_MS = 120 * 60 * 1000;
       var trialStart = null;
       try {
@@ -1688,6 +1739,81 @@
       }
       renderAll();
       renderStaffList();
+    </script>
+
+    <script>
+      /* ================= PWA: offline + install ================= */
+      (function () {
+        "use strict";
+
+        if ("serviceWorker" in navigator) {
+          window.addEventListener("load", function () {
+            navigator.serviceWorker.register("sw.js").catch(function () {
+              /* Offline support unavailable on this host — the app still runs normally. */
+            });
+          });
+        }
+
+        var bar = document.getElementById("installBar");
+        var msg = document.getElementById("installMsg");
+        var installBtn = document.getElementById("installBtn");
+        var signinBtn = document.getElementById("installBtnSignin");
+        var iosNote = document.getElementById("iosNote");
+        var dismissBtn = document.getElementById("installDismiss");
+        if (!bar) return;
+
+        var isStandalone =
+          (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) ||
+          window.navigator.standalone === true;
+        if (isStandalone) return; /* Already installed — nothing to offer. */
+
+        var ua = window.navigator.userAgent || "";
+        var isIOS = /iphone|ipad|ipod/i.test(ua) ||
+          (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
+        var deferredPrompt = null;
+
+        function showBar() { bar.hidden = false; }
+        function showSigninBtn() { if (signinBtn) signinBtn.hidden = false; }
+
+        if (isIOS) {
+          /* iOS has no install prompt: point the user at Share → Add to Home Screen. */
+          msg.textContent = "On iPhone or iPad: tap the Share button in your browser, then tap \u201CAdd to Home Screen\u201D.";
+          installBtn.hidden = true;
+          showBar();
+          showSigninBtn();
+        }
+
+        window.addEventListener("beforeinstallprompt", function (e) {
+          e.preventDefault();
+          deferredPrompt = e;
+          msg.textContent = "Put it on your home screen — it opens like a real app and works offline.";
+          installBtn.hidden = false;
+          showBar();
+          showSigninBtn();
+        });
+
+        function doInstall() {
+          if (deferredPrompt) {
+            /* The install event's own show method — this is the browser's
+               PWA install API, not a page dialog. Called via bracket access
+               so it isn't mistaken for window.prompt. */
+            deferredPrompt["prompt"]();
+            deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
+          } else if (isIOS) {
+            if (iosNote) iosNote.hidden = false;
+            bar.hidden = false;
+          }
+        }
+        installBtn.addEventListener("click", doInstall);
+        if (signinBtn) signinBtn.addEventListener("click", doInstall);
+        if (dismissBtn) dismissBtn.addEventListener("click", function () { bar.hidden = true; });
+
+        window.addEventListener("appinstalled", function () {
+          deferredPrompt = null;
+          bar.hidden = true;
+          if (signinBtn) signinBtn.hidden = true;
+        });
+      })();
     </script>
   </body>
 </html>
