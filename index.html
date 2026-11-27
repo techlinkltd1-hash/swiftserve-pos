@@ -381,6 +381,17 @@
       .role-admin { background: var(--amber-soft); color: var(--amber); }
       .role-manager { background: var(--blue-soft); color: var(--blue); }
       .role-kitchen { background: var(--green-soft); color: var(--green); }
+      .role-bar { background: #e0e7ff; color: #3730a3; }
+      .role-lounge { background: #fce7f3; color: #9d174d; }
+      .station-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+      .station-tab { padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-weight: 700; font-size: 14px; cursor: pointer; }
+      .station-tab.sel { background: #0d7a3f; color: #fff; border-color: #0d7a3f; }
+      .st-chip { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; background: #dcfce7; color: #166534; }
+      .st-chip.st-bar { background: #e0e7ff; color: #3730a3; }
+      .st-chip.st-lounge { background: #fce7f3; color: #9d174d; }
+      .paid-head { margin: 18px 0 10px; font-size: 15px; }
+      .paid-ticket { opacity: .93; }
+      .mgr-row .station-in { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-2); padding: 4px 6px; font-size: 13px; }
 
       /* ---------- Sign in ---------- */
       .signin { position: fixed; inset: 0; z-index: 90; background: var(--bg); display: none; overflow-y: auto; padding: 30px 16px 40px; }
@@ -480,7 +491,7 @@
         </button>
         <button class="nav-btn" data-view="kitchen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0Z"/><path d="M2 11h20M9 7c0-1.5 2-1.5 2-3M14 7c0-1.5 2-1.5 2-3"/></svg>
-          Kitchen
+          Stations
           <span class="badge" id="kitchenBadge" hidden>0</span>
         </button>
         <button class="nav-btn" data-view="bills">
@@ -573,11 +584,10 @@
         <!-- ============ KITCHEN ============ -->
         <section class="view" id="view-kitchen">
           <div class="view-head">
-            <h1>Kitchen display</h1>
-            <p>New tickets land here the moment a server sends them. Move each one along as the food is made.</p>
+            <h1>Kitchen, Bar &amp; Lounge</h1>
+            <p>Each order splits itself: food goes to Kitchen, drinks to Bar, lounge items to Lounge. Move each station’s ticket along as it is made. When a bill is settled, that station’s receipt lands here, marked Paid.</p>
           </div>
           <div class="kds-grid" id="kdsGrid"></div>
-          <div class="empty-note" id="kdsEmpty">No tickets in the kitchen right now. Orders sent from the Orders screen will appear here.</div>
         </section>
 
         <!-- ============ BILLS ============ -->
@@ -601,6 +611,8 @@
           <div class="kpis" id="kpis"></div>
           <div class="dash-grid">
             <div class="panel panel-pad">
+              <h3>Sales by station</h3>
+              <div class="kpis" id="stationSales"></div>
               <h3>Sales by hour</h3>
               <div class="chart-wrap" id="hourChart"></div>
             </div>
@@ -631,6 +643,7 @@
             <form class="add-form" id="addForm">
               <input id="newName" type="text" placeholder="Dish name — e.g. Coconut Rice" required maxlength="48" />
               <select id="newCat" aria-label="Category"></select>
+              <select id="newStation" aria-label="Station"><option value="kitchen">Kitchen</option><option value="bar">Bar</option><option value="lounge">Lounge</option></select>
               <input id="newPrice" type="number" placeholder="Price ₦" min="50" step="50" required />
               <input id="newCost" type="number" placeholder="Cost to make ₦" min="0" step="50" />
               <button class="btn btn-green" type="submit">Add dish</button>
@@ -711,6 +724,8 @@
                 <option value="admin">Admin</option>
                 <option value="manager" selected>Manager</option>
                 <option value="kitchen">Kitchen</option>
+                <option value="bar">Bar</option>
+                <option value="lounge">Lounge</option>
               </select>
               <input id="newUserPin" type="text" inputmode="numeric" placeholder="PIN (4+ digits)" maxlength="8" />
               <button class="btn btn-green" type="submit">Add user</button>
@@ -726,7 +741,7 @@
       <div class="signin-card">
         <div class="mark">S</div>
         <h2>Sign in to SwiftServe POS</h2>
-        <p class="sub">Mama's Kitchen, Lekki. Tap your name, then enter your PIN. What you can see and do depends on your level — Admin, Manager or Kitchen.</p>
+        <p class="sub">Mama's Kitchen, Lekki. Tap your name, then enter your PIN. What you can see and do depends on your level — Admin, Manager, Kitchen, Bar or Lounge.</p>
         <div class="staff-list" id="staffList"></div>
         <form class="pin-form" id="pinForm" hidden>
           <label for="pinInput" id="pinLabel">Your PIN</label>
@@ -734,7 +749,7 @@
           <p class="pin-error" id="pinError" hidden>That PIN doesn't match this name. Check it and try again.</p>
           <button class="btn btn-primary" type="submit">Sign in</button>
         </form>
-        <div class="demo-pins">Demo PINs — Admin <b>1234</b> · Manager <b>2222</b> · Kitchen <b>3333</b><br />The Admin can change these under Users &amp; access.</div>
+        <div class="demo-pins">Demo PINs — Admin <b>1234</b> · Manager <b>2222</b> · Kitchen <b>3333</b> · Bar <b>4444</b> · Lounge <b>5555</b><br />The Admin can change these under Users &amp; access.</div>
         <button class="btn btn-ghost install-signin-btn js-install" id="installBtnSignin" type="button" hidden>Install app on this device</button>
         <p class="install-note" id="iosNote" hidden>On iPhone or iPad: tap the <b>Share</b> button in your browser, then tap <b>Add to Home Screen</b>. SwiftServe POS will sit on your home screen like a normal app.</p>
       </div>
@@ -770,39 +785,51 @@
     <script>
       "use strict";
       /* ================= Data ================= */
-      var CATS = ["Mains", "Soups", "Grills", "Sides", "Drinks", "Desserts"];
-      var CAT_COLORS = { Mains: "#c8500f", Soups: "#b3372a", Grills: "#7a4a12", Sides: "#177245", Drinks: "#256d85", Desserts: "#8a4b7c" };
+      var CATS = ["Mains", "Soups", "Grills", "Sides", "Drinks", "Desserts", "Lounge"];
+      var CAT_COLORS = { Mains: "#c8500f", Soups: "#b3372a", Grills: "#7a4a12", Sides: "#177245", Drinks: "#256d85", Desserts: "#8a4b7c", Lounge: "#6d28d9" };
       var MENU = [
-        { id: 1,  name: "Jollof Rice & Chicken",   cat: "Mains",    price: 4500, avail: true },
-        { id: 2,  name: "Fried Rice & Turkey",     cat: "Mains",    price: 5000, avail: true },
-        { id: 3,  name: "White Rice & Stew",       cat: "Mains",    price: 3800, avail: true },
-        { id: 4,  name: "Pounded Yam & Egusi",     cat: "Mains",    price: 5500, avail: true },
-        { id: 5,  name: "Amala & Ewedu",           cat: "Mains",    price: 4200, avail: true },
-        { id: 6,  name: "Ofada Rice & Ayamase",    cat: "Mains",    price: 4800, avail: true },
-        { id: 7,  name: "Goat Meat Pepper Soup",   cat: "Soups",    price: 3500, avail: true },
-        { id: 8,  name: "Catfish Pepper Soup",     cat: "Soups",    price: 4000, avail: true },
-        { id: 9,  name: "Ogbono Soup",             cat: "Soups",    price: 3000, avail: true },
-        { id: 10, name: "Vegetable Soup (Efo Riro)", cat: "Soups",  price: 3200, avail: true },
-        { id: 11, name: "Okra Soup",               cat: "Soups",    price: 2800, avail: true },
-        { id: 12, name: "Grilled Chicken (Quarter)", cat: "Grills", price: 4500, avail: true },
-        { id: 13, name: "Suya Platter",            cat: "Grills",   price: 3800, avail: true },
-        { id: 14, name: "Grilled Tilapia (Whole)", cat: "Grills",   price: 6500, avail: true },
-        { id: 15, name: "Fried Turkey",            cat: "Grills",   price: 4000, avail: true },
-        { id: 16, name: "Asun (Spicy Goat Meat)",  cat: "Grills",   price: 4200, avail: true },
-        { id: 17, name: "Fried Plantain",          cat: "Sides",    price: 1500, avail: true },
-        { id: 18, name: "French Fries",            cat: "Sides",    price: 1800, avail: true },
-        { id: 19, name: "Coleslaw",                cat: "Sides",    price: 800,  avail: true },
-        { id: 20, name: "Moi Moi",                 cat: "Sides",    price: 1200, avail: true },
-        { id: 21, name: "Puff Puff (6 pcs)",       cat: "Sides",    price: 1000, avail: true },
-        { id: 22, name: "Chapman",                 cat: "Drinks",   price: 2000, avail: true },
-        { id: 23, name: "Fresh Orange Juice",      cat: "Drinks",   price: 1800, avail: true },
-        { id: 24, name: "Zobo Drink",              cat: "Drinks",   price: 1000, avail: true },
-        { id: 25, name: "Bottled Water (75cl)",    cat: "Drinks",   price: 500,  avail: true },
-        { id: 26, name: "Soft Drink (50cl)",       cat: "Drinks",   price: 800,  avail: true },
-        { id: 27, name: "Malt Drink",              cat: "Drinks",   price: 1200, avail: true },
-        { id: 28, name: "Fruit Salad",             cat: "Desserts", price: 2000, avail: true },
-        { id: 29, name: "Ice Cream (2 scoops)",    cat: "Desserts", price: 1500, avail: true },
-        { id: 30, name: "Chin Chin Bowl",          cat: "Desserts", price: 1000, avail: true }
+        { id: 1, name: "Jollof Rice & Chicken", cat: "Mains", price: 4500, station: "kitchen", avail: true },
+        { id: 2, name: "Fried Rice & Turkey", cat: "Mains", price: 5000, station: "kitchen", avail: true },
+        { id: 3, name: "White Rice & Stew", cat: "Mains", price: 3800, station: "kitchen", avail: true },
+        { id: 4, name: "Pounded Yam & Egusi", cat: "Mains", price: 5500, station: "kitchen", avail: true },
+        { id: 5, name: "Amala & Ewedu", cat: "Mains", price: 4200, station: "kitchen", avail: true },
+        { id: 6, name: "Ofada Rice & Ayamase", cat: "Mains", price: 4800, station: "kitchen", avail: true },
+        { id: 7, name: "Goat Meat Pepper Soup", cat: "Soups", price: 3500, station: "kitchen", avail: true },
+        { id: 8, name: "Catfish Pepper Soup", cat: "Soups", price: 4000, station: "kitchen", avail: true },
+        { id: 9, name: "Ogbono Soup", cat: "Soups", price: 3000, station: "kitchen", avail: true },
+        { id: 10, name: "Vegetable Soup (Efo Riro)", cat: "Soups", price: 3200, station: "kitchen", avail: true },
+        { id: 11, name: "Okra Soup", cat: "Soups", price: 2800, station: "kitchen", avail: true },
+        { id: 12, name: "Grilled Chicken (Quarter)", cat: "Grills", price: 4500, station: "kitchen", avail: true },
+        { id: 13, name: "Suya Platter", cat: "Grills", price: 3800, station: "kitchen", avail: true },
+        { id: 14, name: "Grilled Tilapia (Whole)", cat: "Grills", price: 6500, station: "kitchen", avail: true },
+        { id: 15, name: "Fried Turkey", cat: "Grills", price: 4000, station: "kitchen", avail: true },
+        { id: 16, name: "Asun (Spicy Goat Meat)", cat: "Grills", price: 4200, station: "kitchen", avail: true },
+        { id: 17, name: "Fried Plantain", cat: "Sides", price: 1500, station: "kitchen", avail: true },
+        { id: 18, name: "French Fries", cat: "Sides", price: 1800, station: "kitchen", avail: true },
+        { id: 19, name: "Coleslaw", cat: "Sides", price: 800, station: "kitchen", avail: true },
+        { id: 20, name: "Moi Moi", cat: "Sides", price: 1200, station: "kitchen", avail: true },
+        { id: 21, name: "Puff Puff (6 pcs)", cat: "Sides", price: 1000, station: "kitchen", avail: true },
+        { id: 22, name: "Chapman", cat: "Drinks", price: 2000, station: "bar", avail: true },
+        { id: 23, name: "Fresh Orange Juice", cat: "Drinks", price: 1800, station: "bar", avail: true },
+        { id: 24, name: "Zobo Drink", cat: "Drinks", price: 1000, station: "bar", avail: true },
+        { id: 25, name: "Bottled Water (75cl)", cat: "Drinks", price: 500, station: "bar", avail: true },
+        { id: 26, name: "Soft Drink (50cl)", cat: "Drinks", price: 800, station: "bar", avail: true },
+        { id: 27, name: "Malt Drink", cat: "Drinks", price: 1200, station: "bar", avail: true },
+        { id: 28, name: "Fruit Salad", cat: "Desserts", price: 2000, station: "kitchen", avail: true },
+        { id: 29, name: "Ice Cream (2 scoops)", cat: "Desserts", price: 1500, station: "kitchen", avail: true },
+        { id: 30, name: "Chin Chin Bowl", cat: "Desserts", price: 1000, station: "kitchen", avail: true },
+        { id: 31, name: "Lager Beer (650ml)", cat: "Drinks", price: 1500, station: "bar", avail: true },
+        { id: 32, name: "Stout (650ml)", cat: "Drinks", price: 1800, station: "bar", avail: true },
+        { id: 33, name: "Red Wine (glass)", cat: "Drinks", price: 3500, station: "bar", avail: true },
+        { id: 34, name: "White Wine (glass)", cat: "Drinks", price: 3500, station: "bar", avail: true },
+        { id: 35, name: "Fruit Cocktail", cat: "Drinks", price: 2500, station: "bar", avail: true },
+        { id: 36, name: "Palm Wine (cup)", cat: "Drinks", price: 1200, station: "bar", avail: true },
+        { id: 37, name: "Energy Drink", cat: "Drinks", price: 1500, station: "bar", avail: true },
+        { id: 38, name: "Smirnoff Ice", cat: "Drinks", price: 2000, station: "bar", avail: true },
+        { id: 39, name: "Shisha (per session)", cat: "Lounge", price: 5000, station: "lounge", avail: true },
+        { id: 40, name: "Small Chops Platter", cat: "Lounge", price: 3000, station: "lounge", avail: true },
+        { id: 41, name: "Peppered Snail", cat: "Lounge", price: 4500, station: "lounge", avail: true },
+        { id: 42, name: "Lounge Mixed Grill Platter", cat: "Lounge", price: 8500, station: "lounge", avail: true }
       ];
       var SERVERS = ["Adaeze", "Chidi", "Funke", "Tunde"];
       var TABLES = ["Table 1", "Table 2", "Table 3", "Table 4", "Table 5", "Table 6", "Table 7", "Table 8", "Takeaway"];
@@ -810,10 +837,12 @@
       /* What one serving of each dish costs to make (demo figures — the owner enters real ones) */
       var COSTS = { 1: 2100, 2: 2300, 3: 1700, 4: 2600, 5: 1900, 6: 2200, 7: 1600, 8: 1900, 9: 1300, 10: 1400,
                     11: 1200, 12: 2400, 13: 1900, 14: 3400, 15: 2100, 16: 2200, 17: 600, 18: 700, 19: 300, 20: 500,
-                    21: 400, 22: 800, 23: 700, 24: 350, 25: 250, 26: 450, 27: 650, 28: 900, 29: 700, 30: 450 };
+                    21: 400, 22: 800, 23: 700, 24: 350, 25: 250, 26: 450, 27: 650, 28: 900, 29: 700, 30: 450,
+                    31: 900, 32: 1100, 33: 2000, 34: 2000, 35: 1200, 36: 500, 37: 900, 38: 1200,
+                    39: 2000, 40: 1500, 41: 2500, 42: 5000 };
       function dishCost(id) { return COSTS[id] || 0; }
 
-      var nextMenuId = 31;
+      var nextMenuId = 43;
       var orderSeq = 118;
       var orders = [];   // active: {no, table, server, time, hour, status, lines:[{id,name,price,qty}]}
       var sales = [];    // paid:   {no, table, server, time, hour, method, discount, total, lines:[...]}
@@ -895,7 +924,9 @@
         23: [["oranges", 0.4]],
         24: [["zobo", 0.15]],
         26: [["soft", 0.05]],
-        27: [["malt", 0.1]]
+        27: [["malt", 0.1]],
+        35: [["oranges", 0.06]],
+        40: [["oil", 0.1], ["chicken", 0.05]]
       };
       var RESTOCKS = [
         { date: dayStr(5), item: "soft",     qty: 10, cost: 45000, by: "Adaeze" },
@@ -916,13 +947,17 @@
       var USERS = [
         { name: "Adaeze", role: "admin",   pin: "1234" },
         { name: "Chidi",  role: "manager", pin: "2222" },
-        { name: "Funke",  role: "kitchen", pin: "3333" }
+        { name: "Funke",  role: "kitchen", pin: "3333" },
+        { name: "Tunde",  role: "bar",     pin: "4444" },
+        { name: "Blessing", role: "lounge", pin: "5555" }
       ];
-      var ROLE_LBL = { admin: "Admin", manager: "Manager", kitchen: "Kitchen" };
+      var ROLE_LBL = { admin: "Admin", manager: "Manager", kitchen: "Kitchen", bar: "Bar", lounge: "Lounge" };
       var PERMS = {
         admin:   ["pos", "kitchen", "bills", "dashboard", "stock", "profit", "menu", "users"],
         manager: ["pos", "kitchen", "bills", "dashboard", "stock"],
-        kitchen: ["kitchen"]
+        kitchen: ["kitchen"],
+        bar: ["kitchen"],
+        lounge: ["kitchen"]
       };
       var session = null;      // { name, role } once signed in
       var signinUser = null;   // name picked on the sign-in screen
@@ -1008,6 +1043,7 @@
             + (!block
                 ? '<span class="dprice">' + fmt(m.price) + "</span>" + (q ? '<span class="in-cart">' + q + " in this order</span>" : "")
                 : '<span class="dprice">' + esc(block) + "</span>")
+            + '<span class="st-chip st-' + (m.station || "kitchen") + '">' + STATION_LBL[m.station || "kitchen"] + "</span>"
             + "</button>";
         }).join("");
         $("menuGrid").querySelectorAll("[data-dish]").forEach(function (b) {
@@ -1071,36 +1107,93 @@
         orders.push(o);
         cart = [];
         renderAll();
-        toast("Order #" + o.no + " sent to the kitchen for " + o.table);
+        toast("Order #" + o.no + " sent — " + stationsIn(lines).map(function (s) { return STATION_LBL[s]; }).join(" + ") + " · " + o.table);
       });
 
       /* ================= Kitchen ================= */
       var NEXT = { "new": ["preparing", "Start preparing"], "preparing": ["ready", "Mark ready"], "ready": ["served", "Serve to table"] };
       var CHIP = { "new": "st-new-chip", "preparing": "st-preparing-chip", "ready": "st-ready-chip" };
       var CHIPLBL = { "new": "New", "preparing": "Preparing", "ready": "Ready" };
+
+      /* ================= Stations: Kitchen / Bar / Lounge =================
+         Every menu item belongs to one station. An order splits itself: each
+         station sees only its own lines, keeps its own status, and gets its
+         own receipt when the bill is settled. */
+      var STATIONS = ["kitchen", "bar", "lounge"];
+      var STATION_LBL = { kitchen: "Kitchen", bar: "Bar", lounge: "Lounge" };
+      var stationTab = "kitchen";
+      function lineId(l) { return Array.isArray(l) ? l[0] : l.id; }
+      function lineQty(l) { return Array.isArray(l) ? l[1] : l.qty; }
+      function linePrice(l) { if (Array.isArray(l)) { var m = menuItem(l[0]); return m ? m.price : 0; } return l.price; }
+      function lineName(l) { if (Array.isArray(l)) { var m = menuItem(l[0]); return m ? m.name : "Item"; } return l.name; }
+      function stationOfLine(l) { var m = menuItem(lineId(l)); return (m && m.station) || "kitchen"; }
+      function stationLines(lines, st) { return lines.filter(function (l) { return stationOfLine(l) === st; }); }
+      function stationTotal(lines, st) { return stationLines(lines, st).reduce(function (a, l) { return a + linePrice(l) * lineQty(l); }, 0); }
+      function stationsIn(lines) { return STATIONS.filter(function (s) { return stationLines(lines, s).length; }); }
+      /* Per-station status, built lazily so orders saved before stations existed still work. */
+      function stOf(o) {
+        if (!o.st) { o.st = {}; stationsIn(o.lines).forEach(function (s) { o.st[s] = o.status || "new"; }); }
+        return o.st;
+      }
+      function orderStatus(o) {
+        var sts = stOf(o), order = ["new", "preparing", "ready", "served"], keys = Object.keys(sts);
+        if (!keys.length) return o.status || "new";
+        var idx = Math.min.apply(null, keys.map(function (k) { var i = order.indexOf(sts[k]); return i < 0 ? 0 : i; }));
+        return order[idx];
+      }
+      function stationTabsFor() {
+        if (!session) return STATIONS;
+        if (session.role === "bar") return ["bar"];
+        if (session.role === "lounge") return ["lounge"];
+        return STATIONS;
+      }
       function renderKitchen() {
-        var list = orders.filter(function (o) { return o.status !== "served"; });
-        $("kdsEmpty").style.display = list.length ? "none" : "block";
-        $("kdsGrid").innerHTML = list.map(function (o) {
-          var nx = NEXT[o.status];
-          return '<article class="ticket st-' + o.status + '">'
+        var tabs = stationTabsFor();
+        if (tabs.indexOf(stationTab) < 0) stationTab = tabs[0];
+        var hasLines = function (o, t) { return stationLines(o.lines, t).length; };
+        var active = orders.filter(function (o) { return stOf(o)[stationTab] && stOf(o)[stationTab] !== "served" && hasLines(o, stationTab); });
+        var paid = sales.filter(function (s) { return hasLines(s, stationTab); }).slice(-6).reverse();
+        var tabsHtml = tabs.map(function (t) {
+          var n = orders.filter(function (o) { return stOf(o)[t] && stOf(o)[t] !== "served" && hasLines(o, t); }).length;
+          return '<button class="station-tab' + (t === stationTab ? " sel" : "") + '" data-stab="' + t + '">' + STATION_LBL[t] + (n ? " (" + n + ")" : "") + "</button>";
+        }).join("");
+        var tickets = active.map(function (o) {
+          var st = stOf(o)[stationTab];
+          var nx = NEXT[st];
+          return '<article class="ticket st-' + st + '">'
             + '<div class="ticket-head"><span class="tno">#' + o.no + " · " + esc(o.table) + '</span><span class="ttime">' + esc(o.time) + "</span></div>"
-            + '<div class="tsub">Server: ' + esc(o.server) + ' &nbsp;<span class="status-chip ' + CHIP[o.status] + '">' + CHIPLBL[o.status] + "</span></div>"
-            + "<ul>" + o.lines.map(function (l) { return '<li><span class="q">' + l.qty + '×</span><span>' + esc(l.name) + "</span></li>"; }).join("") + "</ul>"
-            + '<button class="btn ' + (o.status === "ready" ? "btn-green" : "btn-primary") + '" data-adv="' + o.no + '">' + nx[1] + "</button>"
+            + '<div class="tsub">Server: ' + esc(o.server) + ' &nbsp;<span class="status-chip ' + CHIP[st] + '">' + CHIPLBL[st] + "</span></div>"
+            + "<ul>" + stationLines(o.lines, stationTab).map(function (l) { return '<li><span class="q">' + lineQty(l) + '×</span><span>' + esc(lineName(l)) + "</span></li>"; }).join("") + "</ul>"
+            + '<button class="btn ' + (st === "ready" ? "btn-green" : "btn-primary") + '" data-adv="' + o.no + '">' + nx[1] + "</button>"
             + "</article>";
         }).join("");
+        var paidHtml = paid.map(function (s) {
+          return '<article class="ticket st-ready paid-ticket">'
+            + '<div class="ticket-head"><span class="tno">#' + s.no + " · " + esc(s.table) + '</span><span class="ttime">' + esc(s.time) + "</span></div>"
+            + '<div class="tsub">PAID by ' + esc(s.method) + " · " + fmt(stationTotal(s.lines, stationTab)) + ' &nbsp;<span class="status-chip st-ready-chip">Paid</span></div>'
+            + "<ul>" + stationLines(s.lines, stationTab).map(function (l) { return '<li><span class="q">' + lineQty(l) + '×</span><span>' + esc(lineName(l)) + "</span></li>"; }).join("") + "</ul>"
+            + "</article>";
+        }).join("");
+        $("kdsGrid").innerHTML = '<div class="station-tabs">' + tabsHtml + "</div>"
+          + (tickets || '<div class="empty-note">No ' + STATION_LBL[stationTab].toLowerCase() + " tickets right now. Orders sent from the Orders screen will appear here.</div>")
+          + (paid.length ? '<h3 class="paid-head">Receipts sent here — paid</h3>' + paidHtml : "");
+        $("kdsGrid").querySelectorAll("[data-stab]").forEach(function (b) {
+          b.addEventListener("click", function () { stationTab = b.getAttribute("data-stab"); renderKitchen(); });
+        });
         $("kdsGrid").querySelectorAll("[data-adv]").forEach(function (b) {
           b.addEventListener("click", function () {
             var o = orders.filter(function (x) { return x.no === +b.getAttribute("data-adv"); })[0];
-            o.status = NEXT[o.status][0];
+            var st = stOf(o);
+            st[stationTab] = NEXT[st[stationTab]][0];
+            o.status = orderStatus(o);
             renderAll();
             if (o.status === "served") toast("Order #" + o.no + " served — ready to bill");
-            else toast("Order #" + o.no + " is now " + o.status);
+            else toast(STATION_LBL[stationTab] + " for order #" + o.no + " is now " + st[stationTab]);
           });
         });
         var kb = $("kitchenBadge");
-        kb.hidden = !list.length; kb.textContent = list.length;
+        var total = tabs.reduce(function (a, t) { return a + orders.filter(function (o) { return stOf(o)[t] && stOf(o)[t] !== "served" && hasLines(o, t); }).length; }, 0);
+        kb.hidden = !total; kb.textContent = total;
       }
 
       /* ================= Bills ================= */
@@ -1110,7 +1203,7 @@
         var bb = $("billsBadge");
         bb.hidden = !list.length; bb.textContent = list.length;
         if (!list.length) {
-          $("billList").innerHTML = '<div class="empty-note">No bills waiting. When the kitchen marks an order ready and it is served, it lands here for payment.</div>';
+          $("billList").innerHTML = '<div class="empty-note">No bills waiting. When every station has its part ready and the order is served, it lands here for payment.</div>';
         } else {
           $("billList").innerHTML = list.map(function (o) {
             return '<button class="bill-row' + (o.no === billNo ? " sel" : "") + '" data-bill="' + o.no + '">'
@@ -1145,6 +1238,7 @@
           + '<div class="sum-row"><span>Subtotal</span><span class="amt">' + fmt(sub) + "</span></div>"
           + (billDiscount ? '<div class="sum-row disc"><span>Discount (' + billDiscount + '%)</span><span class="amt">−' + fmt(discAmt) + "</span></div>" : "")
           + '<div class="sum-row grand"><span>Total to pay</span><span class="amt">' + fmt(total) + "</span></div>"
+          + '<p class="split-note">Receipt goes to: <b>' + stationsIn(o.lines).map(function (s) { return STATION_LBL[s]; }).join(" · ") + "</b> at payment</p>"
           + '<div class="field-row">'
           +   '<div class="field"><label for="discIn">Discount %</label><input id="discIn" type="number" min="0" max="50" step="1" value="' + billDiscount + '" /></div>'
           +   '<div class="field"><label for="splitIn">Split between</label><input id="splitIn" type="number" min="1" max="20" step="1" value="' + billSplit + '" /></div>'
@@ -1177,7 +1271,7 @@
         renderAll();
         $("receiptText").textContent = lastReceipt;
         $("receiptOverlay").classList.add("open");
-        toast("Bill #" + o.no + " settled — " + fmt(total) + " by " + billMethod);
+        toast("Bill #" + o.no + " settled — receipt sent to " + stationsIn(o.lines).map(function (s) { return STATION_LBL[s]; }).join(" + ") + " · " + fmt(total) + " by " + billMethod);
       }
       function buildReceipt(o, sub, discAmt, total) {
         var L = [];
@@ -1187,11 +1281,20 @@
         L.push("Receipt #" + o.no + "        " + o.time);
         L.push(o.table + " · Server: " + o.server);
         L.push("--------------------------------");
-        o.lines.forEach(function (l) {
-          var left = l.qty + " x " + l.name;
-          var right = fmt(l.price * l.qty);
-          while (left.length + right.length < 32) left += " ";
-          L.push(left + right);
+        STATIONS.forEach(function (s) {
+          var ls = stationLines(o.lines, s);
+          if (!ls.length) return;
+          L.push("--- " + STATION_LBL[s].toUpperCase() + " ---");
+          ls.forEach(function (l) {
+            var left = lineQty(l) + " x " + lineName(l);
+            var right = fmt(linePrice(l) * lineQty(l));
+            while (left.length + right.length < 32) left += " ";
+            L.push(left + right);
+          });
+          var sleft = STATION_LBL[s] + " subtotal";
+          var sright = fmt(stationTotal(o.lines, s));
+          while (sleft.length + sright.length < 32) sleft += " ";
+          L.push(sleft + sright);
         });
         L.push("--------------------------------");
         L.push("Subtotal                " + fmt(sub));
@@ -1264,6 +1367,12 @@
           return '<div class="kpi"><div class="klbl">' + k[0] + '</div><div class="kval">' + k[1] + '</div><div class="ksub">' + k[2] + "</div></div>";
         }).join("");
 
+        /* Sales by station (today, across all settled bills) */
+        $("stationSales").innerHTML = STATIONS.map(function (s) {
+          var tot = sales.reduce(function (a, x) { return a + stationTotal(x.lines, s); }, 0);
+          return '<div class="kpi"><div class="klbl">Sales — ' + STATION_LBL[s] + '</div><div class="kval">' + fmt(tot) + '</div><div class="ksub">today, across all bills</div></div>';
+        }).join("");
+
         /* Sales by hour (SVG bars) */
         var byHour = {};
         sales.forEach(function (s) { byHour[s.hour] = (byHour[s.hour] || 0) + s.total; });
@@ -1322,6 +1431,7 @@
             return '<div class="mgr-row"><span class="mname' + (m.avail ? "" : " off") + '">' + esc(m.name) + "</span>"
               + '<span class="mini-lbl">Price ₦</span><input class="price-in" type="number" min="0" step="50" value="' + m.price + '" data-price="' + m.id + '" aria-label="Price for ' + esc(m.name) + '" />'
               + '<span class="mini-lbl">Cost ₦</span><input class="price-in" type="number" min="0" step="50" value="' + dishCost(m.id) + '" data-cost="' + m.id + '" aria-label="Cost to make ' + esc(m.name) + '" />'
+              + '<span class="mini-lbl">Goes to</span><select class="station-in" data-station="' + m.id + '">' + STATIONS.map(function (s) { return '<option value="' + s + '"' + ((m.station || "kitchen") === s ? " selected" : "") + ">" + STATION_LBL[s] + "</option>"; }).join("") + "</select>"
               + '<button class="avail-btn' + (m.avail ? "" : " off") + '" data-avail="' + m.id + '">' + (m.avail ? "Available" : "Sold out") + "</button>"
               + '<button class="del-btn" data-del="' + m.id + '" aria-label="Delete ' + esc(m.name) + '">×</button></div>';
           }).join("");
@@ -1352,6 +1462,14 @@
             renderMenuManager(); renderMenuGrid(); renderCart();
           });
         });
+        $("mgrList").querySelectorAll("[data-station]").forEach(function (sel) {
+          sel.addEventListener("change", function () {
+            var m = menuItem(+sel.getAttribute("data-station"));
+            m.station = sel.value;
+            renderMenuGrid(); renderCart();
+            toast(m.name + " now goes to " + STATION_LBL[m.station]);
+          });
+        });
         $("mgrList").querySelectorAll("[data-del]").forEach(function (b) {
           b.addEventListener("click", function () {
             var id = +b.getAttribute("data-del");
@@ -1369,7 +1487,7 @@
         var price = parseInt($("newPrice").value, 10);
         if (!name || !price || price <= 0) return;
         var nid = nextMenuId++;
-        MENU.push({ id: nid, name: name, cat: $("newCat").value, price: price, avail: true });
+        MENU.push({ id: nid, name: name, cat: $("newCat").value, price: price, station: $("newStation").value, avail: true });
         COSTS[nid] = Math.max(0, parseInt($("newCost").value, 10) || 0);
         $("newName").value = ""; $("newPrice").value = ""; $("newCost").value = "";
         renderMenuManager(); renderMenuGrid();
